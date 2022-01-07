@@ -8,8 +8,10 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -33,6 +35,8 @@ public class Nameserver implements INameserver, INameserverRemote, Serializable 
 
     private final Shell shell;
 
+    private final SimpleDateFormat formatter= new SimpleDateFormat("HH:mm:ss");
+
     /**
      * Creates a new server instance.
      *
@@ -49,6 +53,7 @@ public class Nameserver implements INameserver, INameserverRemote, Serializable 
         this.domain = config.containsKey("domain") ? config.getString("domain") : null;
         this.rootId = config.getString("root_id");
         this.registryPort = config.getInt("registry.port");
+        String host = config.getString("registry.host");
 
         try {
             if (this.domain == null) {
@@ -59,7 +64,7 @@ public class Nameserver implements INameserver, INameserverRemote, Serializable 
 
             } else {
                 // register zone-ns
-                registry = LocateRegistry.getRegistry(this.registryPort);
+                registry = LocateRegistry.getRegistry(host,this.registryPort);
                 INameserverRemote rootRemoteObject = (INameserverRemote) registry.lookup(this.rootId);
                 rootRemoteObject.registerNameserver(this.domain, this);
             }
@@ -77,6 +82,8 @@ public class Nameserver implements INameserver, INameserverRemote, Serializable 
 
     @Override
     public void run() {
+
+        //TODO: Threading
         shell.run();
     }
 
@@ -125,6 +132,10 @@ public class Nameserver implements INameserver, INameserverRemote, Serializable 
 
     @Override
     public String lookup(String username) throws RemoteException {
+        Date date = new Date(System.currentTimeMillis());
+        shell.out().println(
+                String.format("%s : Nameserver for '%s' requested by transfer server",formatter.format(date),username)
+        );
         return mailTable.get(username);
     }
 
@@ -132,6 +143,8 @@ public class Nameserver implements INameserver, INameserverRemote, Serializable 
         if (zonesTable.putIfAbsent(domain, nameserver) != null) {
             throw new AlreadyRegisteredException(String.format("Nameserver with domain '%s' already exists.",domain));
         }
+        Date date = new Date(System.currentTimeMillis());
+        shell.out().println(String.format("%s : Registering nameserver for zone '%s'",formatter.format(date),domain));
     }
 
     private void addNewMailbox(String domain, String address) throws AlreadyRegisteredException {
@@ -139,7 +152,6 @@ public class Nameserver implements INameserver, INameserverRemote, Serializable 
             throw new AlreadyRegisteredException(String.format("MailBox with domain '%s' already exists.",domain));
         }
     }
-
 
     @Command
     @Override
@@ -163,7 +175,8 @@ public class Nameserver implements INameserver, INameserverRemote, Serializable 
 
             try {
 
-                UnicastRemoteObject.unexportObject(this,true);
+                //TODO: müssen zone RMIs exported werden, weil sonst ist die Zeile sinnlos
+                //UnicastRemoteObject.unexportObject(this,true);
                 if(this.domain == null) {
                     this.registry.unbind(this.rootId);
                     UnicastRemoteObject.unexportObject(this.registry,true);
