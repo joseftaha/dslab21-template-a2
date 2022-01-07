@@ -1,9 +1,9 @@
 dslab/mailbox/DmtpMailThreadListener.java
  dslab.mailbox.DmtpMailThreadListener
-dslab/nameserver/Nameserver.java
- dslab.nameserver.Nameserver
-dslab/ComponentFactory.java
- dslab.ComponentFactory
+dslab/transfer/DmtpTransferThreadListener.java
+ dslab.transfer.DmtpTransferThreadListener
+dslab/mailbox/MailboxServer.java
+ dslab.mailbox.MailboxServer
 dslab/monitoring/MonitoringServer.java
  dslab.monitoring.MonitoringServer
 dslab/mailbox/IMailboxServer.java
@@ -40,7 +40,7 @@ dslab/nameserver/INameserver.java
  dslab.nameserver.INameserver
 dslab/mailbox/DmapThreadListener.java
  dslab.mailbox.DmapThreadListener
-dslab/mailbox/MailboxServer.java
- dslab.mailbox.MailboxServer
-dslab/transfer/DmtpTransferThreadListener.java
- dslab.transfer.DmtpTransferThreadListener
+dslab/nameserver/Nameserver.java
+ dslab.nameserver.Nameserver
+dslab/ComponentFactory.java
+ dslab.ComponentFactory

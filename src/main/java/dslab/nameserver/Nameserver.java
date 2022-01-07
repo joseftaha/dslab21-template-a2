@@ -2,11 +2,36 @@ package dslab.nameserver;
 
 import java.io.InputStream;
 import java.io.PrintStream;
+import java.io.Serializable;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
+import at.ac.tuwien.dsg.orvell.Shell;
+import at.ac.tuwien.dsg.orvell.annotation.Command;
 import dslab.ComponentFactory;
 import dslab.util.Config;
 
-public class Nameserver implements INameserver {
+public class Nameserver implements INameserver, INameserverRemote, Serializable {
+
+    private Registry registry;
+
+    private final Map<String,INameserverRemote> zonesTable;
+    private final Map<String, String> mailTable;
+
+    private String domain;
+    private String rootId;
+    private int registryPort;
+
+    private final Shell shell;
 
     /**
      * Creates a new server instance.
@@ -17,27 +42,136 @@ public class Nameserver implements INameserver {
      * @param out the output stream to write console output to
      */
     public Nameserver(String componentId, Config config, InputStream in, PrintStream out) {
-        // TODO
+
+        zonesTable = new ConcurrentHashMap<>();
+        mailTable = new ConcurrentHashMap<>();
+
+        this.domain = config.containsKey("domain") ? config.getString("domain") : null;
+        this.rootId = config.getString("root_id");
+        this.registryPort = config.getInt("registry.port");
+
+        try {
+            if (this.domain == null) {
+                // bind root ns in registry
+                registry = LocateRegistry.createRegistry(this.registryPort);
+                INameserverRemote remote = (INameserverRemote) UnicastRemoteObject.exportObject(this, 0);
+                registry.rebind(this.rootId, remote);
+
+            } else {
+                // register zone-ns
+                registry = LocateRegistry.getRegistry(this.registryPort);
+                INameserverRemote rootRemoteObject = (INameserverRemote) registry.lookup(this.rootId);
+                rootRemoteObject.registerNameserver(this.domain, this);
+            }
+
+        } catch (RemoteException | NotBoundException | InvalidDomainException | AlreadyRegisteredException e) {
+            e.printStackTrace();
+        }
+
+        // instantiate and setup I/O-Shell
+        this.shell = new Shell(in, out);
+        shell.register(this);
+        shell.setPrompt(componentId + "> ");
+
     }
 
     @Override
     public void run() {
-        // TODO
+        shell.run();
     }
 
+    @Override
+    public void registerNameserver(String domain, INameserverRemote nameserver) throws RemoteException, AlreadyRegisteredException, InvalidDomainException {
+        List<String> subdomains = new ArrayList(Arrays.asList(domain.split("\\.")));
+        if (subdomains.size() == 1) {
+            addNewNameserver(domain, nameserver);
+        } else {
+            int pos = subdomains.size()-1;
+            INameserverRemote subdomain = this.getNameserver(subdomains.get(pos));
+            if (subdomains != null) {
+                subdomains.remove(pos);
+                subdomain.registerNameserver(String.join(".",subdomains),nameserver);
+            } else {
+                throw new InvalidDomainException(
+                        String.format("There does not exist a subdomain '%s' in ns-%s", domain, this.domain)
+                );
+            }
+        }
+    }
+
+    @Override
+    public void registerMailboxServer(String domain, String address) throws RemoteException, AlreadyRegisteredException, InvalidDomainException {
+        List<String> subdomains = new ArrayList(Arrays.asList(domain.split("\\.")));
+        if (subdomains.size() == 1) {
+            addNewMailbox(domain, address);
+        } else {
+            int pos = subdomains.size()-1;
+            INameserverRemote subdomain = this.getNameserver(subdomains.get(pos));
+            if (subdomains != null) {
+                subdomains.remove(pos);
+                subdomain.registerMailboxServer(String.join(".",subdomains),address);
+            } else {
+                throw new InvalidDomainException(
+                        String.format("There does not exist a subdomain '%s' in ns-%s", domain, this.domain)
+                );
+            }
+        }
+    }
+
+    @Override
+    public INameserverRemote getNameserver(String zone) throws RemoteException {
+        return zonesTable.get(zone);
+    }
+
+    @Override
+    public String lookup(String username) throws RemoteException {
+        return mailTable.get(username);
+    }
+
+    private void addNewNameserver(String domain, INameserverRemote nameserver) throws AlreadyRegisteredException {
+        if (zonesTable.putIfAbsent(domain, nameserver) != null) {
+            throw new AlreadyRegisteredException(String.format("Nameserver with domain '%s' already exists.",domain));
+        }
+    }
+
+    private void addNewMailbox(String domain, String address) throws AlreadyRegisteredException {
+        if (mailTable.putIfAbsent(domain, address) != null) {
+            throw new AlreadyRegisteredException(String.format("MailBox with domain '%s' already exists.",domain));
+        }
+    }
+
+
+    @Command
     @Override
     public void nameservers() {
-        // TODO
+        for (String domain: zonesTable.keySet().stream().sorted().collect(Collectors.toList())) {
+            shell.out().println(domain);
+        }
     }
 
+    @Command
     @Override
     public void addresses() {
-        // TODO
+        for (String domain: mailTable.keySet().stream().sorted().collect(Collectors.toList())) {
+            shell.out().println(domain + " " + mailTable.get(domain));
+        }
     }
 
+    @Command
     @Override
     public void shutdown() {
-        // TODO
+
+            try {
+
+                UnicastRemoteObject.unexportObject(this,true);
+                if(this.domain == null) {
+                    this.registry.unbind(this.rootId);
+                    UnicastRemoteObject.unexportObject(this.registry,true);
+                }
+
+            } catch (RemoteException | NotBoundException e) {
+                e.printStackTrace();
+            }
     }
 
     public static void main(String[] args) throws Exception {

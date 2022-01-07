@@ -104,8 +104,6 @@ public class MailboxServer implements IMailboxServer, Runnable {
 
     }
 
-    private void persistMail(Mail mail) {
-    }
 
     @Command
     @Override
