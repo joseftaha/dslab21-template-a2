@@ -55,7 +55,9 @@ public class Nameserver implements INameserver, INameserverRemote, Serializable 
         this.registryPort = config.getInt("registry.port");
         String host = config.getString("registry.host");
 
+
         try {
+
             if (this.domain == null) {
                 // bind root ns in registry
                 registry = LocateRegistry.createRegistry(this.registryPort);
@@ -66,6 +68,7 @@ public class Nameserver implements INameserver, INameserverRemote, Serializable 
                 // register zone-ns
                 registry = LocateRegistry.getRegistry(host,this.registryPort);
                 INameserverRemote rootRemoteObject = (INameserverRemote) registry.lookup(this.rootId);
+                UnicastRemoteObject.exportObject(this, 0);
                 rootRemoteObject.registerNameserver(this.domain, this);
             }
 
@@ -82,7 +85,6 @@ public class Nameserver implements INameserver, INameserverRemote, Serializable 
 
     @Override
     public void run() {
-
         //TODO: Threading
         shell.run();
     }
@@ -95,12 +97,16 @@ public class Nameserver implements INameserver, INameserverRemote, Serializable 
         } else {
             int pos = subdomains.size()-1;
             INameserverRemote subdomain = this.getNameserver(subdomains.get(pos));
-            if (subdomains != null) {
+            if (subdomain != null) {
                 subdomains.remove(pos);
+
                 subdomain.registerNameserver(String.join(".",subdomains),nameserver);
             } else {
                 throw new InvalidDomainException(
-                        String.format("There does not exist a subdomain '%s' in ns-%s", domain, this.domain)
+                        String.format("There does not exist a subdomain '%s' in ns-%s",
+                                domain,
+                                this.domain == null ? "root" : this.domain
+                        )
                 );
             }
         }
@@ -114,12 +120,15 @@ public class Nameserver implements INameserver, INameserverRemote, Serializable 
         } else {
             int pos = subdomains.size()-1;
             INameserverRemote subdomain = this.getNameserver(subdomains.get(pos));
-            if (subdomains != null) {
+            if (subdomain != null) {
                 subdomains.remove(pos);
                 subdomain.registerMailboxServer(String.join(".",subdomains),address);
             } else {
                 throw new InvalidDomainException(
-                        String.format("There does not exist a subdomain '%s' in ns-%s", domain, this.domain)
+                        String.format("There does not exist a subdomain '%s' in ns-%s",
+                                domain,
+                                this.domain == null ? "root" : this.domain
+                        )
                 );
             }
         }
@@ -133,9 +142,7 @@ public class Nameserver implements INameserver, INameserverRemote, Serializable 
     @Override
     public String lookup(String username) throws RemoteException {
         Date date = new Date(System.currentTimeMillis());
-        shell.out().println(
-                String.format("%s : Nameserver for '%s' requested by transfer server",formatter.format(date),username)
-        );
+        shell.out().printf("%s : Nameserver for '%s' requested by transfer server%n",formatter.format(date),username);
         return mailTable.get(username);
     }
 
@@ -144,13 +151,15 @@ public class Nameserver implements INameserver, INameserverRemote, Serializable 
             throw new AlreadyRegisteredException(String.format("Nameserver with domain '%s' already exists.",domain));
         }
         Date date = new Date(System.currentTimeMillis());
-        shell.out().println(String.format("%s : Registering nameserver for zone '%s'",formatter.format(date),domain));
+        shell.out().printf("%s : Registering nameserver for zone '%s'%n",formatter.format(date),domain);
     }
 
     private void addNewMailbox(String domain, String address) throws AlreadyRegisteredException {
         if (mailTable.putIfAbsent(domain, address) != null) {
             throw new AlreadyRegisteredException(String.format("MailBox with domain '%s' already exists.",domain));
         }
+        Date date = new Date(System.currentTimeMillis());
+        shell.out().printf("%s : Registering mailbox '%s@%s'%n",formatter.format(date),domain,address);
     }
 
     @Command
@@ -175,8 +184,7 @@ public class Nameserver implements INameserver, INameserverRemote, Serializable 
 
             try {
 
-                //TODO: müssen zone RMIs exported werden, weil sonst ist die Zeile sinnlos
-                //UnicastRemoteObject.unexportObject(this,true);
+                UnicastRemoteObject.unexportObject(this,true);
                 if(this.domain == null) {
                     this.registry.unbind(this.rootId);
                     UnicastRemoteObject.unexportObject(this.registry,true);

@@ -1,68 +1,59 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="dslab.naming.NameserverTest" tests="4" skipped="0" failures="1" errors="0" timestamp="2022-01-07T19:41:27" hostname="taschenrechner" time="38.667">
+<testsuite name="dslab.naming.NameserverTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2022-01-08T01:11:18" hostname="taschenrechner" time="38.411">
   <properties/>
-  <testcase name="ns01_startAndShutdownRootNameserver_createsAndUnexportsRegistryCorrectly" classname="dslab.naming.NameserverTest" time="6.227"/>
-  <testcase name="ns02_startRootNameserver_registersRemoteObjectCorrectly" classname="dslab.naming.NameserverTest" time="6.086"/>
-  <testcase name="ns03_startingZoneNameserver_registersNameserverCorrectly" classname="dslab.naming.NameserverTest" time="13.254"/>
-  <testcase name="ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly" classname="dslab.naming.NameserverTest" time="13.098">
-    <failure message="java.lang.NullPointerException" type="java.lang.NullPointerException">java.lang.NullPointerException
-	at dslab.nameserver.Nameserver.lookup(Nameserver.java:136)
-	at dslab.naming.NameserverTest.ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly(NameserverTest.java:199)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:567)
-	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
-	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
-	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
-	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
-	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:298)
-	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:292)
-	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-	at java.base/java.lang.Thread.run(Thread.java:830)
-</failure>
-  </testcase>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[Jan 07, 2022 8:41:27 PM dslab.naming.NameserverTest ns01_startAndShutdownRootNameserver_createsAndUnexportsRegistryCorrectly
+  <testcase name="ns01_startAndShutdownRootNameserver_createsAndUnexportsRegistryCorrectly" classname="dslab.naming.NameserverTest" time="6.184"/>
+  <testcase name="ns02_startRootNameserver_registersRemoteObjectCorrectly" classname="dslab.naming.NameserverTest" time="6.076"/>
+  <testcase name="ns03_startingZoneNameserver_registersNameserverCorrectly" classname="dslab.naming.NameserverTest" time="13.091"/>
+  <testcase name="ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly" classname="dslab.naming.NameserverTest" time="13.057"/>
+  <system-out><![CDATA[hiii
+hiii
+hiii
+null
+hiii
+hiii
+null
+hiii
+]]></system-out>
+  <system-err><![CDATA[Jan 08, 2022 2:11:18 AM dslab.naming.NameserverTest ns01_startAndShutdownRootNameserver_createsAndUnexportsRegistryCorrectly
 INFO: Starting ns-root thread
-Jan 07, 2022 8:41:30 PM dslab.naming.NameserverTest sendShutdown
+Jan 08, 2022 2:11:21 AM dslab.naming.NameserverTest sendShutdown
 INFO: Sending shutdown to component component
-Jan 07, 2022 8:41:33 PM dslab.naming.NameserverTest ns02_startRootNameserver_registersRemoteObjectCorrectly
+Jan 08, 2022 2:11:24 AM dslab.naming.NameserverTest ns02_startRootNameserver_registersRemoteObjectCorrectly
 INFO: Starting ns-root thread
-Jan 07, 2022 8:41:36 PM dslab.naming.NameserverTest ns02_startRootNameserver_registersRemoteObjectCorrectly
+Jan 08, 2022 2:11:27 AM dslab.naming.NameserverTest ns02_startRootNameserver_registersRemoteObjectCorrectly
 INFO: Looking up root-nameserver in registry
-Jan 07, 2022 8:41:36 PM dslab.naming.NameserverTest sendShutdown
+Jan 08, 2022 2:11:27 AM dslab.naming.NameserverTest sendShutdown
 INFO: Sending shutdown to component component
-Jan 07, 2022 8:41:39 PM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
+Jan 08, 2022 2:11:30 AM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
 INFO: Starting ns-root thread
-Jan 07, 2022 8:41:42 PM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
+Jan 08, 2022 2:11:34 AM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
 INFO: Starting ns-planet thread
-Jan 07, 2022 8:41:45 PM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
+Jan 08, 2022 2:11:37 AM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
 INFO: Looking up root-nameserver in registry
-Jan 07, 2022 8:41:45 PM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
+Jan 08, 2022 2:11:37 AM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
 INFO: Getting nameserver 'planet' from server remote
-Jan 07, 2022 8:41:45 PM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
+Jan 08, 2022 2:11:37 AM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
 INFO: Sending 'nameservers' command
-Jan 07, 2022 8:41:46 PM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
-INFO: Got output: ns-root> 20:41:42 : Registering nameserver for zone 'planet'
+Jan 08, 2022 2:11:38 AM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
+INFO: Got output: ns-root> 02:11:34 : Registering nameserver for zone 'planet'
 planet
-Jan 07, 2022 8:41:46 PM dslab.naming.NameserverTest sendShutdown
+Jan 08, 2022 2:11:38 AM dslab.naming.NameserverTest sendShutdown
 INFO: Sending shutdown to component component
-Jan 07, 2022 8:41:49 PM dslab.naming.NameserverTest sendShutdown
+Jan 08, 2022 2:11:41 AM dslab.naming.NameserverTest sendShutdown
 INFO: Sending shutdown to component component
-Jan 07, 2022 8:41:52 PM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
+Jan 08, 2022 2:11:44 AM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
 INFO: Starting ns-root thread
-Jan 07, 2022 8:41:55 PM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
+Jan 08, 2022 2:11:47 AM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
 INFO: Starting ns-planet thread
-Jan 07, 2022 8:41:58 PM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
+Jan 08, 2022 2:11:50 AM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
 INFO: Looking up root-nameserver in registry
-Jan 07, 2022 8:41:58 PM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
+Jan 08, 2022 2:11:50 AM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
 INFO: Registering mailbox server for @mars.planet mail domain
-Jan 07, 2022 8:41:59 PM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
+Jan 08, 2022 2:11:51 AM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
 INFO: Looking up 'mars' at nameserver planet
-Jan 07, 2022 8:41:59 PM dslab.naming.NameserverTest sendShutdown
+Jan 08, 2022 2:11:51 AM dslab.naming.NameserverTest sendShutdown
 INFO: Sending shutdown to component component
-Jan 07, 2022 8:42:02 PM dslab.naming.NameserverTest sendShutdown
+Jan 08, 2022 2:11:54 AM dslab.naming.NameserverTest sendShutdown
 INFO: Sending shutdown to component component
 ]]></system-err>
 </testsuite>
