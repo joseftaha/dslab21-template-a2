@@ -1,26 +1,37 @@
 package dslab.mailbox;
 
 import dslab.entity.Mail;
+import dslab.secure.DmapSecure;
 import dslab.util.Config;
 import dslab.util.UserMailBox;
 
+import javax.crypto.Cipher;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.SecretKey;
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
+import java.security.InvalidKeyException;
+import java.security.Key;
+import java.security.NoSuchAlgorithmException;
 import java.util.Map;
 
 public class DmapThreadListener extends Thread {
 
     private final Map<String, UserMailBox> mailBoxes;
 
+    private final String componentId;
     private final Config users;
     private final Socket socket;
 
     private String username = null;
     private boolean protocolError = false;
 
-    public DmapThreadListener(Socket socket, Config users, Map<String, UserMailBox> mailBoxes) {
+    private final static String CIPHER_ALGORITHM = "RSA/ECB/PKCS1Padding";
 
+    public DmapThreadListener(String componentId, Socket socket, Config users, Map<String, UserMailBox> mailBoxes) {
+
+        this.componentId = componentId;
         this.socket = socket;
         this.users = users;
         this.mailBoxes = mailBoxes;
@@ -36,7 +47,7 @@ public class DmapThreadListener extends Thread {
                 PrintWriter writer = new PrintWriter(socket.getOutputStream());
 
                 // response for valid connection
-                writer.println("ok DMAP");
+                writer.println("ok DMAP2.0");
                 writer.flush();
 
                 String request;
@@ -44,18 +55,38 @@ public class DmapThreadListener extends Thread {
 
                     String[] parts = request.split("\\s");
                     String response = "ok";
-
                     if (parts.length == 0) continue;
 
                     switch (parts[0]) {
-
+                        case "startsecure":
+                            response += " " + this.componentId;
+                            //response += " " + DmapSecure.getRandomNumber(32);
+                            //response += " " + HandshakeProtocol.getServerPublicKey("mailbox-earth-planet");
+                            try {
+                                SecretKey key = DmapSecure.generateSecretKey("AES", 256);
+                            } catch (NoSuchAlgorithmException e) {
+                                throw new RuntimeException("Error while creating secret key: " + e.getMessage());
+                            }
+                            Cipher cipher;
+                            try {
+                                cipher = Cipher.getInstance(CIPHER_ALGORITHM);
+                            } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
+                                throw new RuntimeException("Invalid algorithm " + CIPHER_ALGORITHM + ": " + e.getMessage());
+                            }
+                            Key key = DmapSecure.getServerPublicKey("mailbox-univer-ze");
+                            try {
+                                cipher.init(Cipher.ENCRYPT_MODE, key);
+                            } catch (InvalidKeyException e) {
+                                throw new RuntimeException("Invalid key: " + e.getMessage());
+                            }
+                            break;
                         case "login":
                             if (parts.length != 3) protocolError = true;
                             else {
                                 if (users.containsKey(parts[1]))
-                                        if (users.getString(parts[1]).equals(parts[2]))
-                                            username = parts[1];
-                                        else response = "error wrong password";
+                                    if (users.getString(parts[1]).equals(parts[2]))
+                                        username = parts[1];
+                                    else response = "error wrong password";
                                 else response = "error unknown user";
                             }
                             break;
@@ -68,14 +99,15 @@ public class DmapThreadListener extends Thread {
                             if (parts.length != 2) protocolError = true;
                             else if (username == null) response = "error not logged in";
                             else {
-                                try{
+                                try {
                                     int id = Integer.parseInt(parts[1]);
                                     Mail mail = mailBoxes.get(username).getMail(id);
                                     if (mail == null) response = "error unknown message id";
                                     else response = mail.toString();
                                     break;
-                                } catch (NumberFormatException e){
-                                    protocolError = true; break;
+                                } catch (NumberFormatException e) {
+                                    protocolError = true;
+                                    break;
                                 }
                             }
                             break;
@@ -89,8 +121,9 @@ public class DmapThreadListener extends Thread {
                                         response = "error unknown message id";
                                 }
                                 break;
-                            } catch (NumberFormatException e){
-                                protocolError = true; break;
+                            } catch (NumberFormatException e) {
+                                protocolError = true;
+                                break;
                             }
                         case "logout":
                             if (parts.length != 1) protocolError = true;
@@ -107,7 +140,7 @@ public class DmapThreadListener extends Thread {
                             break;
                     }
 
-                    if(protocolError){
+                    if (protocolError) {
                         writer.println("error protocol error");
                         writer.flush();
                         socket.close();

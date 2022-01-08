@@ -34,6 +34,7 @@ public class MailboxServer implements IMailboxServer, Runnable {
     private final Config users;
     private final ExecutorService executor;
     private final Shell shell;
+    private final String componentId;
 
     private ServerSocket maServer;
     private ServerSocket mtServer;
@@ -51,6 +52,7 @@ public class MailboxServer implements IMailboxServer, Runnable {
 
         this.config = config;
         this.users = users;
+        this.componentId = componentId;
 
         // open connection to nameserver MRI and register this mailbox server
         // in the nameserver
@@ -122,7 +124,7 @@ public class MailboxServer implements IMailboxServer, Runnable {
                 while (true) {
                     // run new MaClientSocket in new Thread
                     Socket maSocket = maServer.accept();
-                    executor.execute(new DmapThreadListener(maSocket,users,userMailBoxMap));
+                    executor.execute(new DmapThreadListener(this.componentId,maSocket,users,userMailBoxMap));
                 }
 
             } catch (IOException e) {
