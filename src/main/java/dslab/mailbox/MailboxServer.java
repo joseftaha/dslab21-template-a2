@@ -7,6 +7,7 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -59,6 +60,7 @@ public class MailboxServer implements IMailboxServer, Runnable {
                     this.config.getString("registry.host"),
                     this.config.getInt("registry.port")
             );
+
             this.remote = (INameserverRemote) registry.lookup(this.config.getString("root_id"));
 
             this.remote.registerMailboxServer(

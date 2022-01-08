@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import at.ac.tuwien.dsg.orvell.Shell;
+import at.ac.tuwien.dsg.orvell.StopShellException;
 import at.ac.tuwien.dsg.orvell.annotation.Command;
 import dslab.ComponentFactory;
 import dslab.util.Config;
@@ -85,6 +86,7 @@ public class Nameserver implements INameserver, INameserverRemote, Serializable 
 
     @Override
     public void run() {
+        //TODO: close everything especially shell
         //TODO: Threading
         shell.run();
     }
@@ -182,17 +184,18 @@ public class Nameserver implements INameserver, INameserverRemote, Serializable 
     @Override
     public void shutdown() {
 
-            try {
+        try {
 
-                UnicastRemoteObject.unexportObject(this,true);
-                if(this.domain == null) {
-                    this.registry.unbind(this.rootId);
-                    UnicastRemoteObject.unexportObject(this.registry,true);
-                }
-
-            } catch (RemoteException | NotBoundException e) {
-                e.printStackTrace();
+            UnicastRemoteObject.unexportObject(this,true);
+            if(this.domain == null) {
+                this.registry.unbind(this.rootId);
+                UnicastRemoteObject.unexportObject(this.registry,true);
             }
+
+        } catch (RemoteException | NotBoundException e) {
+            e.printStackTrace();
+        }
+        throw new StopShellException();
     }
 
     public static void main(String[] args) throws Exception {

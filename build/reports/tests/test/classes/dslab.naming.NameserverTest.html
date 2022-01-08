@@ -41,7 +41,7 @@
 </td>
 <td>
 <div class="infoBox" id="duration">
-<div class="counter">38.408s</div>
+<div class="counter">38.645s</div>
 <p>duration</p>
 </div>
 </td>
@@ -64,10 +64,7 @@
 <a href="#tab0">Tests</a>
 </li>
 <li>
-<a href="#tab1">Standard output</a>
-</li>
-<li>
-<a href="#tab2">Standard error</a>
+<a href="#tab1">Standard error</a>
 </li>
 </ul>
 <div id="tab0" class="tab">
@@ -82,83 +79,69 @@
 </thead>
 <tr>
 <td class="success">ns01_startAndShutdownRootNameserver_createsAndUnexportsRegistryCorrectly</td>
-<td class="success">6.184s</td>
+<td class="success">6.360s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">ns02_startRootNameserver_registersRemoteObjectCorrectly</td>
-<td class="success">6.076s</td>
+<td class="success">6.073s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">ns03_startingZoneNameserver_registersNameserverCorrectly</td>
-<td class="success">13.091s</td>
+<td class="success">13.106s</td>
 <td class="success">passed</td>
 </tr>
 <tr>
 <td class="success">ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly</td>
-<td class="success">13.057s</td>
+<td class="success">13.106s</td>
 <td class="success">passed</td>
 </tr>
 </table>
 </div>
 <div id="tab1" class="tab">
-<h2>Standard output</h2>
-<span class="code">
-<pre>hiii
-hiii
-hiii
-null
-hiii
-hiii
-null
-hiii
-</pre>
-</span>
-</div>
-<div id="tab2" class="tab">
 <h2>Standard error</h2>
 <span class="code">
-<pre>Jan 08, 2022 2:11:18 AM dslab.naming.NameserverTest ns01_startAndShutdownRootNameserver_createsAndUnexportsRegistryCorrectly
+<pre>Jan 08, 2022 1:59:31 PM dslab.naming.NameserverTest ns01_startAndShutdownRootNameserver_createsAndUnexportsRegistryCorrectly
 INFO: Starting ns-root thread
-Jan 08, 2022 2:11:21 AM dslab.naming.NameserverTest sendShutdown
+Jan 08, 2022 1:59:34 PM dslab.naming.NameserverTest sendShutdown
 INFO: Sending shutdown to component component
-Jan 08, 2022 2:11:24 AM dslab.naming.NameserverTest ns02_startRootNameserver_registersRemoteObjectCorrectly
+Jan 08, 2022 1:59:37 PM dslab.naming.NameserverTest ns02_startRootNameserver_registersRemoteObjectCorrectly
 INFO: Starting ns-root thread
-Jan 08, 2022 2:11:27 AM dslab.naming.NameserverTest ns02_startRootNameserver_registersRemoteObjectCorrectly
+Jan 08, 2022 1:59:40 PM dslab.naming.NameserverTest ns02_startRootNameserver_registersRemoteObjectCorrectly
 INFO: Looking up root-nameserver in registry
-Jan 08, 2022 2:11:27 AM dslab.naming.NameserverTest sendShutdown
+Jan 08, 2022 1:59:40 PM dslab.naming.NameserverTest sendShutdown
 INFO: Sending shutdown to component component
-Jan 08, 2022 2:11:30 AM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
+Jan 08, 2022 1:59:43 PM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
 INFO: Starting ns-root thread
-Jan 08, 2022 2:11:34 AM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
+Jan 08, 2022 1:59:46 PM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
 INFO: Starting ns-planet thread
-Jan 08, 2022 2:11:37 AM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
+Jan 08, 2022 1:59:49 PM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
 INFO: Looking up root-nameserver in registry
-Jan 08, 2022 2:11:37 AM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
+Jan 08, 2022 1:59:49 PM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
 INFO: Getting nameserver 'planet' from server remote
-Jan 08, 2022 2:11:37 AM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
+Jan 08, 2022 1:59:49 PM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
 INFO: Sending 'nameservers' command
-Jan 08, 2022 2:11:38 AM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
-INFO: Got output: ns-root&gt; 02:11:34 : Registering nameserver for zone 'planet'
+Jan 08, 2022 1:59:50 PM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
+INFO: Got output: ns-root&gt; 13:59:46 : Registering nameserver for zone 'planet'
 planet
-Jan 08, 2022 2:11:38 AM dslab.naming.NameserverTest sendShutdown
+Jan 08, 2022 1:59:50 PM dslab.naming.NameserverTest sendShutdown
 INFO: Sending shutdown to component component
-Jan 08, 2022 2:11:41 AM dslab.naming.NameserverTest sendShutdown
+Jan 08, 2022 1:59:53 PM dslab.naming.NameserverTest sendShutdown
 INFO: Sending shutdown to component component
-Jan 08, 2022 2:11:44 AM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
+Jan 08, 2022 1:59:56 PM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
 INFO: Starting ns-root thread
-Jan 08, 2022 2:11:47 AM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
+Jan 08, 2022 1:59:59 PM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
 INFO: Starting ns-planet thread
-Jan 08, 2022 2:11:50 AM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
+Jan 08, 2022 2:00:02 PM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
 INFO: Looking up root-nameserver in registry
-Jan 08, 2022 2:11:50 AM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
+Jan 08, 2022 2:00:02 PM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
 INFO: Registering mailbox server for @mars.planet mail domain
-Jan 08, 2022 2:11:51 AM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
+Jan 08, 2022 2:00:03 PM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
 INFO: Looking up 'mars' at nameserver planet
-Jan 08, 2022 2:11:51 AM dslab.naming.NameserverTest sendShutdown
+Jan 08, 2022 2:00:03 PM dslab.naming.NameserverTest sendShutdown
 INFO: Sending shutdown to component component
-Jan 08, 2022 2:11:54 AM dslab.naming.NameserverTest sendShutdown
+Jan 08, 2022 2:00:06 PM dslab.naming.NameserverTest sendShutdown
 INFO: Sending shutdown to component component
 </pre>
 </span>
@@ -171,7 +154,7 @@ INFO: Sending shutdown to component component
 <input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
 </label>
 </div>Generated by 
-<a href="http://www.gradle.org">Gradle 6.6.1</a> at Jan 8, 2022, 2:11:57 AM</p>
+<a href="http://www.gradle.org">Gradle 6.6.1</a> at Jan 8, 2022, 2:00:10 PM</p>
 </div>
 </div>
 </body>

@@ -6,6 +6,7 @@ import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.security.spec.RSAOtherPrimeInfo;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,11 +61,11 @@ public class TransferServer implements ITransferServer, Runnable {
         try {
 
             Registry registry = LocateRegistry.getRegistry(
-                    this.config.getString("registry.host"), //TODO: mit oder ohne host??
+                    this.config.getString("registry.host"),
                     this.config.getInt("registry.port")
             );
-            this.remote = (INameserverRemote) registry.lookup(this.config.getString("root_id"));
 
+            this.remote = (INameserverRemote) registry.lookup(this.config.getString("root_id"));
 
         } catch (RemoteException | NotBoundException e) {
             e.printStackTrace();
@@ -128,11 +129,11 @@ public class TransferServer implements ITransferServer, Runnable {
     private String getAddressFromNameServer(String domain) {
 
         String[] subdomains = domain.split("\\.");
-        INameserverRemote next = remote;
+        INameserverRemote next = this.remote;
         String address = null;
 
         // iterate through nameservers via getNameServers until we reach right one
-        for(int c = subdomains.length-1; c<=0; c--) {
+        for(int c = subdomains.length-1; c>=0; c--) {
 
             try {
                 if(c == 0) {
