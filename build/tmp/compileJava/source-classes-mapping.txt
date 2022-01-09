@@ -18,10 +18,10 @@ dslab/monitoring/IMonitoringServer.java
  dslab.monitoring.IMonitoringServer
 dslab/nameserver/InvalidDomainException.java
  dslab.nameserver.InvalidDomainException
-dslab/transfer/TransferServer.java
- dslab.transfer.TransferServer
 dslab/util/Validator.java
  dslab.util.Validator
+dslab/transfer/TransferServer.java
+ dslab.transfer.TransferServer
 dslab/util/Config.java
  dslab.util.Config
 dslab/transfer/ITransferServer.java
@@ -30,10 +30,10 @@ dslab/util/UserMailBox.java
  dslab.util.UserMailBox
 dslab/transfer/DmtpTransferClient.java
  dslab.transfer.DmtpTransferClient
-dslab/nameserver/AlreadyRegisteredException.java
- dslab.nameserver.AlreadyRegisteredException
 dslab/client/MessageClient.java
  dslab.client.MessageClient
+dslab/nameserver/AlreadyRegisteredException.java
+ dslab.nameserver.AlreadyRegisteredException
 dslab/client/IMessageClient.java
  dslab.client.IMessageClient
 dslab/nameserver/INameserver.java
