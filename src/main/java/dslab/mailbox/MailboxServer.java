@@ -3,6 +3,11 @@ package dslab.mailbox;
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -11,11 +16,16 @@ import at.ac.tuwien.dsg.orvell.StopShellException;
 import at.ac.tuwien.dsg.orvell.annotation.Command;
 import dslab.ComponentFactory;
 import dslab.entity.Mail;
+import dslab.nameserver.AlreadyRegisteredException;
+import dslab.nameserver.INameserverRemote;
+import dslab.nameserver.InvalidDomainException;
 import dslab.util.Config;
 import dslab.util.UserMailBox;
 
 
 public class MailboxServer implements IMailboxServer, Runnable {
+
+    private INameserverRemote remote;
 
     private Map<String, UserMailBox> userMailBoxMap;
     private BlockingQueue<Mail> mailQueue;
@@ -24,6 +34,7 @@ public class MailboxServer implements IMailboxServer, Runnable {
     private final Config users;
     private final ExecutorService executor;
     private final Shell shell;
+    private final String componentId;
 
     private ServerSocket maServer;
     private ServerSocket mtServer;
@@ -41,6 +52,28 @@ public class MailboxServer implements IMailboxServer, Runnable {
 
         this.config = config;
         this.users = users;
+        this.componentId = componentId;
+
+        // open connection to nameserver MRI and register this mailbox server
+        // in the nameserver
+        try {
+
+            Registry registry = LocateRegistry.getRegistry(
+                    this.config.getString("registry.host"),
+                    this.config.getInt("registry.port")
+            );
+
+            this.remote = (INameserverRemote) registry.lookup(this.config.getString("root_id"));
+
+            this.remote.registerMailboxServer(
+                    this.config.getString("domain"),
+                    String.format("localhost:%s",this.config.getString("dmtp.tcp.port"))
+            );
+
+        } catch (RemoteException | NotBoundException | AlreadyRegisteredException | InvalidDomainException e) {
+            e.printStackTrace();
+        }
+
 
         // instantiate HashMap for user-list and Blocked Queue
         this.userMailBoxMap = new ConcurrentHashMap<>();
@@ -91,7 +124,7 @@ public class MailboxServer implements IMailboxServer, Runnable {
                 while (true) {
                     // run new MaClientSocket in new Thread
                     Socket maSocket = maServer.accept();
-                    executor.execute(new DmapThreadListener(maSocket,users,userMailBoxMap));
+                    executor.execute(new DmapThreadListener(this.componentId,maSocket,users,userMailBoxMap));
                 }
 
             } catch (IOException e) {
@@ -104,8 +137,6 @@ public class MailboxServer implements IMailboxServer, Runnable {
 
     }
 
-    private void persistMail(Mail mail) {
-    }
 
     @Command
     @Override

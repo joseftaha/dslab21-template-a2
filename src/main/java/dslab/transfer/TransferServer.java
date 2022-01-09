@@ -2,6 +2,11 @@ package dslab.transfer;
 
 import java.io.*;
 import java.net.*;
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.security.spec.RSAOtherPrimeInfo;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -16,15 +21,21 @@ import at.ac.tuwien.dsg.orvell.StopShellException;
 import at.ac.tuwien.dsg.orvell.annotation.Command;
 import dslab.ComponentFactory;
 import dslab.entity.Mail;
+import dslab.nameserver.AlreadyRegisteredException;
+import dslab.nameserver.INameserverRemote;
+import dslab.nameserver.InvalidDomainException;
 import dslab.util.Config;
 
 
 public class TransferServer implements ITransferServer, Runnable {
 
+    private INameserverRemote remote;
+
     private BlockingQueue<Mail> mailQueue;
 
     private final Config config;
-    private final Config lookUpTable;
+
+    //private final Config lookUpTable;
     private final ExecutorService executor;
     private final Shell shell;
 
@@ -43,7 +54,23 @@ public class TransferServer implements ITransferServer, Runnable {
     public TransferServer(String componentId, Config config, Config lookUpTable, InputStream in, PrintStream out) {
 
         this.config = config;
-        this.lookUpTable = lookUpTable;
+        //this.lookUpTable = lookUpTable;
+
+
+        // open connection to nameserver MRI
+        try {
+
+            Registry registry = LocateRegistry.getRegistry(
+                    this.config.getString("registry.host"),
+                    this.config.getInt("registry.port")
+            );
+
+            this.remote = (INameserverRemote) registry.lookup(this.config.getString("root_id"));
+
+        } catch (RemoteException | NotBoundException e) {
+            e.printStackTrace();
+        }
+
 
         // instantiate ThreadPoolExecutor
         this.executor = Executors.newFixedThreadPool(8);
@@ -99,6 +126,34 @@ public class TransferServer implements ITransferServer, Runnable {
     }
 
 
+    private String getAddressFromNameServer(String domain) {
+
+        String[] subdomains = domain.split("\\.");
+        INameserverRemote next = this.remote;
+        String address = null;
+
+        // iterate through nameservers via getNameServers until we reach right one
+        for(int c = subdomains.length-1; c>=0; c--) {
+
+            try {
+                if(c == 0) {
+                    address = next.lookup(subdomains[c]);
+                    break;
+                }
+                next = next.getNameserver(subdomains[c]);
+                if(next == null) {
+                    break;
+                }
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return address;
+    }
+
+
+
     private void forwardMailBox(Mail mail) {
 
         Stream<String> domains = Arrays.stream(mail.getTo().split(" ")).map(to-> to.split("@")[1]).distinct();
@@ -108,11 +163,13 @@ public class TransferServer implements ITransferServer, Runnable {
 
         // try sending mail to all mailBox-domains
         domains.forEach(domain -> {
-            if (lookUpTable.containsKey(domain)){
 
-                String domainAndPort = lookUpTable.getString(domain);
-                String mailBoxDomain = domainAndPort.split(":")[0];
-                int mailBoxPort = Integer.parseInt(domainAndPort.split(":")[1]);
+            String address = getAddressFromNameServer(domain);
+
+            if (address != null){
+
+                String mailBoxDomain = address.split(":")[0];
+                int mailBoxPort = Integer.parseInt(address.split(":")[1]);
 
                 if (!connectDmtpClientAndSend(mailBoxDomain,mailBoxPort, mail)){
                     errorMailBoxes.add(domain);
@@ -125,7 +182,9 @@ public class TransferServer implements ITransferServer, Runnable {
 
         // try to send error message to sender
         if(!errorMailBoxes.isEmpty()){
-            if(lookUpTable.containsKey(mail.getFrom().split("@")[1])){
+
+            String address = getAddressFromNameServer(mail.getFrom().split("@")[1]);
+            if(address != null){
                 try{
                     Mail errorMail = new Mail();
 
@@ -137,7 +196,7 @@ public class TransferServer implements ITransferServer, Runnable {
                             String.join(", ",errorMailBoxes))
                     );
 
-                    String[] domainAndPort = lookUpTable.getString(mail.getFrom().split("@")[1]).split(":");
+                    String[] domainAndPort = address.split(":");
                     connectDmtpClientAndSend(
                             domainAndPort[0],
                             Integer.parseInt(domainAndPort[1]),

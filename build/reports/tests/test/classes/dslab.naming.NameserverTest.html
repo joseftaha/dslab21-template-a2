@@ -29,7 +29,7 @@
 </td>
 <td>
 <div class="infoBox" id="failures">
-<div class="counter">4</div>
+<div class="counter">0</div>
 <p>failures</p>
 </div>
 </td>
@@ -41,7 +41,7 @@
 </td>
 <td>
 <div class="infoBox" id="duration">
-<div class="counter">36.110s</div>
+<div class="counter">38.645s</div>
 <p>duration</p>
 </div>
 </td>
@@ -50,8 +50,8 @@
 </div>
 </td>
 <td>
-<div class="infoBox failures" id="successRate">
-<div class="percent">0%</div>
+<div class="infoBox success" id="successRate">
+<div class="percent">100%</div>
 <p>successful</p>
 </div>
 </td>
@@ -61,119 +61,13 @@
 <div id="tabs">
 <ul class="tabLinks">
 <li>
-<a href="#tab0">Failed tests</a>
+<a href="#tab0">Tests</a>
 </li>
 <li>
-<a href="#tab1">Tests</a>
-</li>
-<li>
-<a href="#tab2">Standard error</a>
+<a href="#tab1">Standard error</a>
 </li>
 </ul>
 <div id="tab0" class="tab">
-<h2>Failed tests</h2>
-<div class="test">
-<a name="ns01_startAndShutdownRootNameserver_createsAndUnexportsRegistryCorrectly"></a>
-<h3 class="failures">ns01_startAndShutdownRootNameserver_createsAndUnexportsRegistryCorrectly</h3>
-<span class="code">
-<pre>java.lang.NumberFormatException: For input string: &quot;port_range+9&quot;
-	at java.base/java.lang.NumberFormatException.forInputString(NumberFormatException.java:68)
-	at java.base/java.lang.Integer.parseInt(Integer.java:658)
-	at java.base/java.lang.Integer.parseInt(Integer.java:776)
-	at dslab.util.Config.getInt(Config.java:52)
-	at dslab.naming.NameserverTest.ns01_startAndShutdownRootNameserver_createsAndUnexportsRegistryCorrectly(NameserverTest.java:78)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:567)
-	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
-	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
-	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
-	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
-	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:298)
-	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:292)
-	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-	at java.base/java.lang.Thread.run(Thread.java:830)
-</pre>
-</span>
-</div>
-<div class="test">
-<a name="ns02_startRootNameserver_registersRemoteObjectCorrectly"></a>
-<h3 class="failures">ns02_startRootNameserver_registersRemoteObjectCorrectly</h3>
-<span class="code">
-<pre>java.lang.NumberFormatException: For input string: &quot;port_range+9&quot;
-	at java.base/java.lang.NumberFormatException.forInputString(NumberFormatException.java:68)
-	at java.base/java.lang.Integer.parseInt(Integer.java:658)
-	at java.base/java.lang.Integer.parseInt(Integer.java:776)
-	at dslab.util.Config.getInt(Config.java:52)
-	at dslab.naming.NameserverTest.ns02_startRootNameserver_registersRemoteObjectCorrectly(NameserverTest.java:109)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:567)
-	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
-	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
-	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
-	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
-	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:298)
-	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:292)
-	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-	at java.base/java.lang.Thread.run(Thread.java:830)
-</pre>
-</span>
-</div>
-<div class="test">
-<a name="ns03_startingZoneNameserver_registersNameserverCorrectly"></a>
-<h3 class="failures">ns03_startingZoneNameserver_registersNameserverCorrectly</h3>
-<span class="code">
-<pre>java.lang.NumberFormatException: For input string: &quot;port_range+9&quot;
-	at java.base/java.lang.NumberFormatException.forInputString(NumberFormatException.java:68)
-	at java.base/java.lang.Integer.parseInt(Integer.java:658)
-	at java.base/java.lang.Integer.parseInt(Integer.java:776)
-	at dslab.util.Config.getInt(Config.java:52)
-	at dslab.naming.NameserverTest.ns03_startingZoneNameserver_registersNameserverCorrectly(NameserverTest.java:141)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:567)
-	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
-	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
-	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
-	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
-	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:298)
-	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:292)
-	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-	at java.base/java.lang.Thread.run(Thread.java:830)
-</pre>
-</span>
-</div>
-<div class="test">
-<a name="ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly"></a>
-<h3 class="failures">ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly</h3>
-<span class="code">
-<pre>java.lang.NumberFormatException: For input string: &quot;port_range+9&quot;
-	at java.base/java.lang.NumberFormatException.forInputString(NumberFormatException.java:68)
-	at java.base/java.lang.Integer.parseInt(Integer.java:658)
-	at java.base/java.lang.Integer.parseInt(Integer.java:776)
-	at dslab.util.Config.getInt(Config.java:52)
-	at dslab.naming.NameserverTest.ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly(NameserverTest.java:185)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
-	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
-	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-	at java.base/java.lang.reflect.Method.invoke(Method.java:567)
-	at org.junit.runners.model.FrameworkMethod$1.runReflectiveCall(FrameworkMethod.java:50)
-	at org.junit.internal.runners.model.ReflectiveCallable.run(ReflectiveCallable.java:12)
-	at org.junit.runners.model.FrameworkMethod.invokeExplosively(FrameworkMethod.java:47)
-	at org.junit.internal.runners.statements.InvokeMethod.evaluate(InvokeMethod.java:17)
-	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:298)
-	at org.junit.internal.runners.statements.FailOnTimeout$CallableStatement.call(FailOnTimeout.java:292)
-	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-	at java.base/java.lang.Thread.run(Thread.java:830)
-</pre>
-</span>
-</div>
-</div>
-<div id="tab1" class="tab">
 <h2>Tests</h2>
 <table>
 <thead>
@@ -184,53 +78,70 @@
 </tr>
 </thead>
 <tr>
-<td class="failures">ns01_startAndShutdownRootNameserver_createsAndUnexportsRegistryCorrectly</td>
-<td class="failures">6.055s</td>
-<td class="failures">failed</td>
+<td class="success">ns01_startAndShutdownRootNameserver_createsAndUnexportsRegistryCorrectly</td>
+<td class="success">6.360s</td>
+<td class="success">passed</td>
 </tr>
 <tr>
-<td class="failures">ns02_startRootNameserver_registersRemoteObjectCorrectly</td>
-<td class="failures">6.013s</td>
-<td class="failures">failed</td>
+<td class="success">ns02_startRootNameserver_registersRemoteObjectCorrectly</td>
+<td class="success">6.073s</td>
+<td class="success">passed</td>
 </tr>
 <tr>
-<td class="failures">ns03_startingZoneNameserver_registersNameserverCorrectly</td>
-<td class="failures">12.029s</td>
-<td class="failures">failed</td>
+<td class="success">ns03_startingZoneNameserver_registersNameserverCorrectly</td>
+<td class="success">13.106s</td>
+<td class="success">passed</td>
 </tr>
 <tr>
-<td class="failures">ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly</td>
-<td class="failures">12.013s</td>
-<td class="failures">failed</td>
+<td class="success">ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly</td>
+<td class="success">13.106s</td>
+<td class="success">passed</td>
 </tr>
 </table>
 </div>
-<div id="tab2" class="tab">
+<div id="tab1" class="tab">
 <h2>Standard error</h2>
 <span class="code">
-<pre>Dec 21, 2021 2:26:17 PM dslab.naming.NameserverTest ns01_startAndShutdownRootNameserver_createsAndUnexportsRegistryCorrectly
+<pre>Jan 08, 2022 1:59:31 PM dslab.naming.NameserverTest ns01_startAndShutdownRootNameserver_createsAndUnexportsRegistryCorrectly
 INFO: Starting ns-root thread
-Dec 21, 2021 2:26:20 PM dslab.naming.NameserverTest sendShutdown
+Jan 08, 2022 1:59:34 PM dslab.naming.NameserverTest sendShutdown
 INFO: Sending shutdown to component component
-Dec 21, 2021 2:26:23 PM dslab.naming.NameserverTest ns02_startRootNameserver_registersRemoteObjectCorrectly
+Jan 08, 2022 1:59:37 PM dslab.naming.NameserverTest ns02_startRootNameserver_registersRemoteObjectCorrectly
 INFO: Starting ns-root thread
-Dec 21, 2021 2:26:26 PM dslab.naming.NameserverTest sendShutdown
+Jan 08, 2022 1:59:40 PM dslab.naming.NameserverTest ns02_startRootNameserver_registersRemoteObjectCorrectly
+INFO: Looking up root-nameserver in registry
+Jan 08, 2022 1:59:40 PM dslab.naming.NameserverTest sendShutdown
 INFO: Sending shutdown to component component
-Dec 21, 2021 2:26:29 PM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
+Jan 08, 2022 1:59:43 PM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
 INFO: Starting ns-root thread
-Dec 21, 2021 2:26:32 PM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
+Jan 08, 2022 1:59:46 PM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
 INFO: Starting ns-planet thread
-Dec 21, 2021 2:26:35 PM dslab.naming.NameserverTest sendShutdown
+Jan 08, 2022 1:59:49 PM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
+INFO: Looking up root-nameserver in registry
+Jan 08, 2022 1:59:49 PM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
+INFO: Getting nameserver 'planet' from server remote
+Jan 08, 2022 1:59:49 PM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
+INFO: Sending 'nameservers' command
+Jan 08, 2022 1:59:50 PM dslab.naming.NameserverTest ns03_startingZoneNameserver_registersNameserverCorrectly
+INFO: Got output: ns-root&gt; 13:59:46 : Registering nameserver for zone 'planet'
+planet
+Jan 08, 2022 1:59:50 PM dslab.naming.NameserverTest sendShutdown
 INFO: Sending shutdown to component component
-Dec 21, 2021 2:26:38 PM dslab.naming.NameserverTest sendShutdown
+Jan 08, 2022 1:59:53 PM dslab.naming.NameserverTest sendShutdown
 INFO: Sending shutdown to component component
-Dec 21, 2021 2:26:41 PM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
+Jan 08, 2022 1:59:56 PM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
 INFO: Starting ns-root thread
-Dec 21, 2021 2:26:44 PM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
+Jan 08, 2022 1:59:59 PM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
 INFO: Starting ns-planet thread
-Dec 21, 2021 2:26:47 PM dslab.naming.NameserverTest sendShutdown
+Jan 08, 2022 2:00:02 PM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
+INFO: Looking up root-nameserver in registry
+Jan 08, 2022 2:00:02 PM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
+INFO: Registering mailbox server for @mars.planet mail domain
+Jan 08, 2022 2:00:03 PM dslab.naming.NameserverTest ns04_registerAndLookupMailboxServer_registersAndReturnsAddressCorrectly
+INFO: Looking up 'mars' at nameserver planet
+Jan 08, 2022 2:00:03 PM dslab.naming.NameserverTest sendShutdown
 INFO: Sending shutdown to component component
-Dec 21, 2021 2:26:50 PM dslab.naming.NameserverTest sendShutdown
+Jan 08, 2022 2:00:06 PM dslab.naming.NameserverTest sendShutdown
 INFO: Sending shutdown to component component
 </pre>
 </span>
@@ -243,7 +154,7 @@ INFO: Sending shutdown to component component
 <input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
 </label>
 </div>Generated by 
-<a href="http://www.gradle.org">Gradle 6.6.1</a> at Dec 21, 2021, 2:26:53 PM</p>
+<a href="http://www.gradle.org">Gradle 6.6.1</a> at Jan 8, 2022, 2:00:10 PM</p>
 </div>
 </div>
 </body>
