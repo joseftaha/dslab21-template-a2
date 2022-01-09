@@ -1,7 +1,13 @@
 package dslab.client;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -12,13 +18,23 @@ import at.ac.tuwien.dsg.orvell.StopShellException;
 import at.ac.tuwien.dsg.orvell.annotation.Command;
 import dslab.ComponentFactory;
 import dslab.util.Config;
+import dslab.util.Keys;
+
+import javax.crypto.spec.SecretKeySpec;
 
 public class MessageClient implements IMessageClient, Runnable {
 
     private Shell shell;
     private Config config;
-    private String loggedInUser = null;
+    private SecretKeySpec hmac;
 
+    private Socket socketDMAP;
+    BufferedReader readerDMAP;
+    PrintWriter writerDMAP;
+
+    private Socket socketDMTP;
+    BufferedReader readerDMTP;
+    PrintWriter writerDMTP;
 
     /**
      * Creates a new client instance.
@@ -30,22 +46,35 @@ public class MessageClient implements IMessageClient, Runnable {
      */
     public MessageClient(String componentId, Config config, InputStream in, PrintStream out) {
         this.config = config;
+        try {
+            this.hmac = Keys.readSecretKey(new File("keys/hmac.key"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         this.shell = new Shell(in, out);
         this.shell.register(this);
         this.shell.setPrompt(componentId + "> ");
-        System.out.println(config);
+
+        if(!connectDMAP()) shell.out().println("Could not connect to mailbox server");
     }
 
     @Override
     public void run() {
         shell.run();
-        System.out.println("Exiting shell");
+        shell.out().println("Exiting shell");
     }
 
     @Override
     @Command
     public void inbox() {
-
+        try {
+            writerDMAP.println("list");
+            writerDMAP.flush();
+            System.out.println(readerDMAP.readLine());
+            //if(!readerDMAP.readLine().split(" ")[0].equals("ok")) shell.out().println("error");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -57,45 +86,128 @@ public class MessageClient implements IMessageClient, Runnable {
     @Override
     @Command
     public void verify(String id) {
-
+        System.out.println();
     }
 
     @Override
     @Command
     public void msg(String to, String subject, String data) {
+        if(!connectDMTP()) shell.out().println("Could not connect to transfer server");
+
+        try {
+            writerDMTP.println("begin");
+            writerDMTP.flush();
+            String response = readerDMTP.readLine();
+            if(!response.split(" ")[0].equals("ok")) {
+                shell.out().println("error");
+                return;
+            }
+
+            writerDMTP.println(String.format("from %s", config.getString("transfer.email")));
+            writerDMTP.flush();
+            response = readerDMTP.readLine();
+            if(!response.split(" ")[0].equals("ok")) {
+                shell.out().println("error");
+                return;
+            }
+
+            writerDMTP.println(String.format("to %s", to));
+            writerDMTP.flush();
+            response = readerDMTP.readLine();
+            if(!response.split(" ")[0].equals("ok")) {
+                shell.out().println("error");
+                return;
+            }
+
+            writerDMTP.println(String.format("subject %s", subject));
+            writerDMTP.flush();
+            response = readerDMTP.readLine();
+            if(!response.split(" ")[0].equals("ok")) {
+                shell.out().println("error");
+                return;
+            }
+
+            writerDMTP.println(String.format("data %s", data));
+            writerDMTP.flush();
+            response = readerDMTP.readLine();
+            if(!response.split(" ")[0].equals("ok")) {
+                shell.out().println("error");
+                return;
+            }
+
+            writerDMTP.println("send");
+            writerDMTP.flush();
+            response = readerDMTP.readLine();
+            if(!response.split(" ")[0].equals("ok")) {
+                shell.out().println("error");
+                return;
+            }
+
+            writerDMTP.println("quit");
+            writerDMTP.flush();
+            response = readerDMTP.readLine();
+            if(!response.split(" ")[0].equals("ok")) {
+                shell.out().println("error");
+                return;
+            }
+
+            shell.out().println("ok");
+            socketDMTP.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
 
     }
 
     @Override
     @Command
     public void shutdown() {
+        try {
+            socketDMAP.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         throw new StopShellException();
     }
 
-    static void shutdownAndAwaitTermination(ExecutorService executor) {
-        executor.shutdown();
+    public boolean connectDMAP() {
         try {
-            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
-                executor.shutdownNow();
-                if (!executor.awaitTermination(5, TimeUnit.SECONDS))
-                    System.err.println("Threadpool could not terminate");
-            }
-        } catch (InterruptedException e) {
-            executor.shutdownNow();
-            Thread.currentThread().interrupt();
+            socketDMAP = new Socket(config.getString("mailbox.host"), config.getInt("mailbox.port"));
+            readerDMAP = new BufferedReader(new InputStreamReader(socketDMAP.getInputStream()));
+            writerDMAP = new PrintWriter(socketDMAP.getOutputStream());
+            if(!readerDMAP.readLine().split(" ")[0].equals("ok")) return false;
+
+            writerDMAP.println("startsecure");
+            writerDMAP.flush();
+            if(!readerDMAP.readLine().split(" ")[0].equals("ok")) return false;
+
+            writerDMAP.println(String.format("login %s %s", config.getString("mailbox.user"), config.getString("mailbox.password")));
+            writerDMAP.flush();
+            if(!readerDMAP.readLine().split(" ")[0].equals("ok")) return false;
+
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
         }
+        return false;
     }
 
-    public void connectDMAP() {
-
+    private boolean connectDMTP() {
+        try {
+            socketDMTP = new Socket(config.getString("transfer.host"), config.getInt("transfer.port"));
+            readerDMTP = new BufferedReader(new InputStreamReader(socketDMTP.getInputStream()));
+            writerDMTP = new PrintWriter(socketDMTP.getOutputStream());
+            return readerDMTP.readLine().split(" ")[0].equals("ok");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     public static void main(String[] args) throws Exception {
         IMessageClient client = ComponentFactory.createMessageClient(args[0], System.in, System.out);
-        ExecutorService executor = Executors.newFixedThreadPool(8);
-        executor.execute(client);
-
-        shutdownAndAwaitTermination(executor);
-        System.out.println("fsdfsadf");
+        client.run();
     }
 }
