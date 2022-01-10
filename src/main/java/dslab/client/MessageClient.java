@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -67,11 +68,45 @@ public class MessageClient implements IMessageClient, Runnable {
     @Override
     @Command
     public void inbox() {
+        ArrayList<String> ids = new ArrayList<>();
         try {
             writerDMAP.println("list");
             writerDMAP.flush();
-            System.out.println(readerDMAP.readLine());
-            //if(!readerDMAP.readLine().split(" ")[0].equals("ok")) shell.out().println("error");
+            String response;
+            while (true) {
+                response = readerDMAP.readLine();
+                if(response.equals("none")) {
+                    shell.out().println("No messages in inbox");
+                    break;
+                } else if(response.equals("ok")) {
+                    break;
+                } else ids.add(response.split(" ")[0]);
+            }
+
+
+            for(String id : ids) {
+                writerDMAP.println(String.format("show %s", id));
+                writerDMAP.flush();
+
+                response = readerDMAP.readLine();
+                if(response.equals("error unknown message id")) {
+                    shell.out().println("Error unknown message ID: " + id);
+                    return;
+                }
+                while(true) {
+                    if(response.equals("ok")) {
+                        shell.out().println();
+                        break;
+                    } else if(response.startsWith("from")) {
+                        shell.out().println("ID: " + id);
+                        shell.out().println(response);
+                    } else {
+                        shell.out().println(response);
+                    }
+                    response = readerDMAP.readLine();
+                }
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -80,7 +115,15 @@ public class MessageClient implements IMessageClient, Runnable {
     @Override
     @Command
     public void delete(String id) {
-
+        try {
+            writerDMAP.println(String.format("delete %s", id));
+            writerDMAP.flush();
+            String response = readerDMAP.readLine();
+            if(!response.split(" ")[0].equals("ok")) shell.out().println("ok");
+            else shell.out().println(response);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override

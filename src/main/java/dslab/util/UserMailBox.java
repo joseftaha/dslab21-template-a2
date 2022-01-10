@@ -34,7 +34,7 @@ public class UserMailBox {
             Mail mail = mails.get(id);
             mailsList.add(String.format("%d %s %s",id, mail.getFrom(), mail.getSubject()));
         }
-        return mailsList.isEmpty() ? "none" : String.join("\n",mailsList);
+        return mailsList.isEmpty() ? "none" : String.format("%s\nok", String.join("\n",mailsList));
     }
 
     public Mail getMail(Integer id){

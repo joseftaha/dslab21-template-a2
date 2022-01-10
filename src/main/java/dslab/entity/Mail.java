@@ -56,7 +56,8 @@ public class Mail {
         return "from " + from + "\n" +
                 "to " + to + "\n" +
                 "subject " + subject + "\n" +
-                "data " + data;
+                "data " + data + "\n" +
+                "ok";
     }
 
 }
