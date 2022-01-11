@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -18,6 +19,7 @@ import at.ac.tuwien.dsg.orvell.Shell;
 import at.ac.tuwien.dsg.orvell.StopShellException;
 import at.ac.tuwien.dsg.orvell.annotation.Command;
 import dslab.ComponentFactory;
+import dslab.secure.DmapSecure;
 import dslab.util.Config;
 import dslab.util.Keys;
 
@@ -36,6 +38,8 @@ public class MessageClient implements IMessageClient, Runnable {
     private Socket socketDMTP;
     BufferedReader readerDMTP;
     PrintWriter writerDMTP;
+
+    private DmapSecure dmapSecure;
 
     /**
      * Creates a new client instance.
@@ -63,6 +67,12 @@ public class MessageClient implements IMessageClient, Runnable {
     public void run() {
         shell.run();
         shell.out().println("Exiting shell");
+    }
+
+    @Override
+    @Command
+    public void startsecure(){
+
     }
 
     @Override
@@ -220,12 +230,18 @@ public class MessageClient implements IMessageClient, Runnable {
             socketDMAP = new Socket(config.getString("mailbox.host"), config.getInt("mailbox.port"));
             readerDMAP = new BufferedReader(new InputStreamReader(socketDMAP.getInputStream()));
             writerDMAP = new PrintWriter(socketDMAP.getOutputStream());
+
+            if (readerDMAP.readLine().equals("ok DMAP2.0"));
+
+            DmapSecure dmapSecure = new DmapSecure(readerDMAP, writerDMAP, null);
+            dmapSecure.performHandshakeClient();
+            System.out.println("Handshake complete");
+
             if(!readerDMAP.readLine().split(" ")[0].equals("ok")) return false;
 
             writerDMAP.println("startsecure");
             writerDMAP.flush();
             if(!readerDMAP.readLine().split(" ")[0].equals("ok")) return false;
-
             writerDMAP.println(String.format("login %s %s", config.getString("mailbox.user"), config.getString("mailbox.password")));
             writerDMAP.flush();
             if(!readerDMAP.readLine().split(" ")[0].equals("ok")) return false;

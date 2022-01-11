@@ -59,26 +59,8 @@ public class DmapThreadListener extends Thread {
 
                     switch (parts[0]) {
                         case "startsecure":
-                            response += " " + this.componentId;
-                            //response += " " + DmapSecure.getRandomNumber(32);
-                            //response += " " + HandshakeProtocol.getServerPublicKey("mailbox-earth-planet");
-                            try {
-                                SecretKey key = DmapSecure.generateSecretKey("AES", 256);
-                            } catch (NoSuchAlgorithmException e) {
-                                throw new RuntimeException("Error while creating secret key: " + e.getMessage());
-                            }
-                            Cipher cipher;
-                            try {
-                                cipher = Cipher.getInstance(CIPHER_ALGORITHM);
-                            } catch (NoSuchAlgorithmException | NoSuchPaddingException e) {
-                                throw new RuntimeException("Invalid algorithm " + CIPHER_ALGORITHM + ": " + e.getMessage());
-                            }
-                            Key key = DmapSecure.getServerPublicKey("mailbox-univer-ze");
-                            try {
-                                cipher.init(Cipher.ENCRYPT_MODE, key);
-                            } catch (InvalidKeyException e) {
-                                throw new RuntimeException("Invalid key: " + e.getMessage());
-                            }
+                            DmapSecure dmapSecure = new DmapSecure(reader, writer, componentId);
+                            dmapSecure.performHandshakeServer();
                             break;
                         case "login":
                             if (parts.length != 3) protocolError = true;

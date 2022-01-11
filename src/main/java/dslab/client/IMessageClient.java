@@ -14,6 +14,11 @@ public interface IMessageClient extends Runnable {
     void run();
 
     /**
+     * establishes a secure connection to the mailbox server.
+     */
+    void startsecure();
+
+    /**
      * Outputs the contents of the user's inbox on the shell.
      */
     void inbox();
