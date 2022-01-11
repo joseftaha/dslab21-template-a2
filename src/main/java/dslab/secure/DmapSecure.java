@@ -58,13 +58,11 @@ public class DmapSecure implements IDmapSecure {
 
     public static PublicKey getServerPublicKey(String serverName) throws IOException {
         File file = new File("keys/client/" + serverName + "_pub.der");
-        System.out.println("public key: " + file.getAbsolutePath());
         return Keys.readPublicKey(file);
     }
 
     public static PrivateKey getServerPrivateKey(String serverName) throws IOException {
         File file = new File("keys/server/" + serverName + ".der");
-        System.out.println("private key: " + file.getAbsolutePath());
         return Keys.readPrivateKey(file);
     }
 
@@ -72,14 +70,6 @@ public class DmapSecure implements IDmapSecure {
         KeyGenerator generator = KeyGenerator.getInstance(algorithm);
         generator.init(keySize);
         return generator.generateKey();
-    }
-
-    private String[] getChallengeAndIv(String input) {
-        String[] inputSplit = input.split(" ");
-        if (inputSplit.length != 4) {
-            return null;
-        }
-        return inputSplit;
     }
 
     private void initAesCipher(String secretKey, String iv) {
@@ -99,8 +89,6 @@ public class DmapSecure implements IDmapSecure {
             throw new RuntimeException("error while creating AES cipher: " + e.getMessage());
         }
     }
-
-
 
     @Override
     public void sendMessage(String message) {
@@ -133,6 +121,16 @@ public class DmapSecure implements IDmapSecure {
         }
     }
 
+    public String decryptMessage(String message) {
+        try {
+            byte[] decryptedMessage = this.aesCipherDecrypt.doFinal(base64ToBinary(message));
+
+            return new String(decryptedMessage);
+        } catch (IllegalBlockSizeException | BadPaddingException e) {
+            throw new RuntimeException("Error while decrypting message: " + e.getMessage());
+        }
+    }
+
     private void sendChallenge(String challenge, String key, String iv) throws NoSuchPaddingException, NoSuchAlgorithmException, IOException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 
         PublicKey publicKeyServer = getServerPublicKey(componentId);
@@ -140,7 +138,7 @@ public class DmapSecure implements IDmapSecure {
         Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         cipher.init(Cipher.ENCRYPT_MODE, publicKeyServer);
 
-        String message = "ok " + challenge + " " + key + " " + " " + iv;
+        String message = "ok " + challenge + " " + key + " " + iv;
 
         byte[] messageBytes = message.getBytes();
         messageBytes = cipher.doFinal(messageBytes);
@@ -148,7 +146,6 @@ public class DmapSecure implements IDmapSecure {
         writer.println(binaryToBase64(messageBytes));
         writer.flush();
 
-        System.out.println("send " + message);
     }
 
     private String readChallenge() throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
@@ -180,22 +177,17 @@ public class DmapSecure implements IDmapSecure {
                 throw new RuntimeException("Error while performing Handshake");
             }
             this.componentId = responseSplit[1];
-            System.out.println(response);
 
             // send ok <client-challenge> <secret-key> <iv>
             String challenge = getRandomNumber(32);
             String secretKey = binaryToBase64(generateSecretKey("AES", 256).getEncoded());
             String iv = getRandomNumber(16);
-            System.out.println("sending challenge: " + iv);
             sendChallenge(challenge, secretKey, iv);
 
-            System.out.println("initialising AES");
             initAesCipher(secretKey, iv);
-            System.out.println("done initialising AES");
 
             // read ok <client-challenge>
             response = readMessage();
-            System.out.println("client challenge: " + response);
             responseSplit = response.split(" ");
             if (responseSplit.length != 2) {
                 throw new RuntimeException("Error while performing Handshake");
@@ -206,8 +198,6 @@ public class DmapSecure implements IDmapSecure {
 
             // send ok
             sendMessage("ok");
-
-            System.out.println("Handshake complete");
 
         } catch (IOException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException | NoSuchAlgorithmException e) {
             throw new RuntimeException("error while performing handshake" + e.getMessage());
@@ -221,25 +211,21 @@ public class DmapSecure implements IDmapSecure {
             // send ok <componentId>
             writer.println("ok " + componentId);
             writer.flush();
-            System.out.println("send componentId: " + componentId);
 
             // read ok <client-challenge> <secret-key> <iv>
             response = readChallenge();
-            String[] responseSplit = getChallengeAndIv(response);
-            if (responseSplit == null){
-                return;
+            String[] responseSplit = response.split(" ");
+            if (responseSplit.length != 4){
+                throw new RuntimeException("Error while reading client message");
             }
             String clientChallenge = responseSplit[1];
             String secretKey = responseSplit[2];
             String iv = responseSplit[3];
-            System.out.println("iv: " + iv);
-            System.out.flush();
 
             initAesCipher(secretKey, iv);
 
             // send ok <client-challenge>
             String message = "ok " + clientChallenge;
-            System.out.println("sending: " + message);
             sendMessage(message);
 
             // read ok
@@ -247,8 +233,6 @@ public class DmapSecure implements IDmapSecure {
             if (!response.equals("ok")) {
                 throw new RuntimeException("Error unable to perform Handshake");
             }
-
-            System.out.println("Handshake complete!");
 
         } catch (IOException e) {
             throw new RuntimeException("unable to perform Handshake: " + e.getMessage());

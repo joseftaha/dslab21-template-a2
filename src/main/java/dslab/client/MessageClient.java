@@ -78,13 +78,13 @@ public class MessageClient implements IMessageClient, Runnable {
     @Override
     @Command
     public void inbox() {
+        dmapSecure.sendMessage("list");
         ArrayList<String> ids = new ArrayList<>();
         try {
-            writerDMAP.println("list");
-            writerDMAP.flush();
-            String response;
+
+            String response = dmapSecure.readMessage();
             while (true) {
-                response = readerDMAP.readLine();
+                response = dmapSecure.readMessage();
                 if(response.equals("none")) {
                     shell.out().println("No messages in inbox");
                     break;
@@ -233,20 +233,16 @@ public class MessageClient implements IMessageClient, Runnable {
 
             if (readerDMAP.readLine().equals("ok DMAP2.0"));
 
-            DmapSecure dmapSecure = new DmapSecure(readerDMAP, writerDMAP, null);
+            dmapSecure = new DmapSecure(readerDMAP, writerDMAP, null);
             dmapSecure.performHandshakeClient();
-            System.out.println("Handshake complete");
 
-            if(!readerDMAP.readLine().split(" ")[0].equals("ok")) return false;
+            //perform login
+            String loginMessage = String.format("login %s %s", config.getString("mailbox.user"), config.getString("mailbox.password"));
+            dmapSecure.sendMessage(loginMessage);
 
-            writerDMAP.println("startsecure");
-            writerDMAP.flush();
-            if(!readerDMAP.readLine().split(" ")[0].equals("ok")) return false;
-            writerDMAP.println(String.format("login %s %s", config.getString("mailbox.user"), config.getString("mailbox.password")));
-            writerDMAP.flush();
-            if(!readerDMAP.readLine().split(" ")[0].equals("ok")) return false;
+            String response = dmapSecure.readMessage();
+            return response.split(" ").length == 1 && response.split(" ")[0].equals("ok");
 
-            return true;
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -27,7 +27,7 @@ public class DmapThreadListener extends Thread {
     private String username = null;
     private boolean protocolError = false;
 
-    private final static String CIPHER_ALGORITHM = "RSA/ECB/PKCS1Padding";
+    private DmapSecure dmapSecure;
 
     public DmapThreadListener(String componentId, Socket socket, Config users, Map<String, UserMailBox> mailBoxes) {
 
@@ -53,13 +53,17 @@ public class DmapThreadListener extends Thread {
                 String request;
                 while ((request = reader.readLine()) != null) {
 
+                    if (dmapSecure != null) {
+                        request = dmapSecure.decryptMessage(request);
+                    }
+
                     String[] parts = request.split("\\s");
                     String response = "ok";
                     if (parts.length == 0) continue;
 
                     switch (parts[0]) {
                         case "startsecure":
-                            DmapSecure dmapSecure = new DmapSecure(reader, writer, componentId);
+                            dmapSecure = new DmapSecure(reader, writer, componentId);
                             dmapSecure.performHandshakeServer();
                             break;
                         case "login":
@@ -128,9 +132,12 @@ public class DmapThreadListener extends Thread {
                         socket.close();
                     }
 
-                    writer.println(response);
-                    writer.flush();
-
+                    if (dmapSecure == null) {
+                        writer.println(response);
+                        writer.flush();
+                    } else {
+                        dmapSecure.sendMessage(response);
+                    }
                 }
 
             } catch (SocketException e) {
