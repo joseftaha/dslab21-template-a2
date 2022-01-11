@@ -8,11 +8,13 @@ import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
 import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
+import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
@@ -20,12 +22,15 @@ import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.util.Base64;
 
-public class DmapSecure {
+public class DmapSecure implements IDmapSecure {
 
     private final BufferedReader reader;
     private final PrintWriter writer;
     private final SecureRandom secureRandom;
     private String componentId;
+
+    private Cipher aesCipherEncrypt;
+    private Cipher aesCipherDecrypt;
 
     private String iv;
 
@@ -36,11 +41,11 @@ public class DmapSecure {
         this.secureRandom = new SecureRandom();
     }
 
-    private static String binaryToAscii(byte[] input) {
+    private static String binaryToBase64(byte[] input) {
         return Base64.getEncoder().encodeToString(input);
     }
 
-    private static byte[] asciiToBinary(String input) {
+    private static byte[] base64ToBinary(String input) {
         return Base64.getDecoder().decode(input);
     }
 
@@ -48,7 +53,7 @@ public class DmapSecure {
         SecureRandom secureRandom = new SecureRandom();
         byte[] output = new byte[length];
         secureRandom.nextBytes(output);
-        return binaryToAscii(output);
+        return binaryToBase64(output);
     }
 
     public static PublicKey getServerPublicKey(String serverName) throws IOException {
@@ -77,92 +82,174 @@ public class DmapSecure {
         return inputSplit;
     }
 
-    private void sendMessageClient(String message) throws NoSuchPaddingException, NoSuchAlgorithmException, IOException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    private void initAesCipher(String secretKey, String iv) {
+
+        byte[] decodedKey = base64ToBinary(secretKey);
+
+        SecretKey originalKey = new SecretKeySpec(decodedKey, 0, decodedKey.length, "AES");
+
+        try {
+                this.aesCipherEncrypt = Cipher.getInstance("AES/CTR/NoPadding");
+                this.aesCipherEncrypt.init(Cipher.ENCRYPT_MODE, originalKey, new IvParameterSpec(base64ToBinary(iv)));
+
+                this.aesCipherDecrypt = Cipher.getInstance("AES/CTR/NoPadding");
+                this.aesCipherDecrypt.init(Cipher.DECRYPT_MODE, originalKey, new IvParameterSpec(base64ToBinary(iv)));
+
+        } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidAlgorithmParameterException | InvalidKeyException e) {
+            throw new RuntimeException("error while creating AES cipher: " + e.getMessage());
+        }
+    }
+
+
+
+    @Override
+    public void sendMessage(String message) {
+        try {
+
+            byte[] encryptedMessage = this.aesCipherEncrypt.doFinal(message.getBytes());
+
+            writer.println(binaryToBase64(encryptedMessage));
+            writer.flush();
+
+        } catch (IllegalBlockSizeException | BadPaddingException e) {
+            throw new RuntimeException("error while reading public key: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public String readMessage() {
+        try {
+
+            String message = reader.readLine();
+
+            byte[] decryptedMessage = this.aesCipherDecrypt.doFinal(base64ToBinary(message));
+
+            return new String(decryptedMessage);
+
+        } catch(IOException e) {
+            throw new RuntimeException("Error while reading message: " + e.getMessage());
+        } catch (IllegalBlockSizeException | BadPaddingException e) {
+            throw new RuntimeException("Error while decrypting message: " + e.getMessage());
+        }
+    }
+
+    private void sendChallenge(String challenge, String key, String iv) throws NoSuchPaddingException, NoSuchAlgorithmException, IOException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 
         PublicKey publicKeyServer = getServerPublicKey(componentId);
 
         Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         cipher.init(Cipher.ENCRYPT_MODE, publicKeyServer);
 
-        byte[] messageBytes = message.getBytes(StandardCharsets.UTF_8);
-        cipher.doFinal(messageBytes);
+        String message = "ok " + challenge + " " + key + " " + " " + iv;
 
-        writer.println(binaryToAscii(messageBytes));
+        byte[] messageBytes = message.getBytes();
+        messageBytes = cipher.doFinal(messageBytes);
+
+        writer.println(binaryToBase64(messageBytes));
         writer.flush();
+
+        System.out.println("send " + message);
     }
 
-    private String readResponseServer() throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
+    private String readChallenge() throws IOException, NoSuchPaddingException, NoSuchAlgorithmException, InvalidKeyException, IllegalBlockSizeException, BadPaddingException {
 
         PrivateKey privateKey = getServerPrivateKey(componentId);
 
+        String response = reader.readLine();
+
         Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
         cipher.init(Cipher.DECRYPT_MODE, privateKey);
+        byte[] decryptedMessage = cipher.doFinal(base64ToBinary(response));
 
-        String response = reader.readLine();
-        System.out.println("response: " + response);
-
-        byte[] decryptedMessage = cipher.doFinal(response.getBytes());
-        System.out.println("decripted: " + binaryToAscii(decryptedMessage));
-        return binaryToAscii(decryptedMessage);
+        return new String(decryptedMessage);
     }
 
+    @Override
     public void performHandshakeClient() {
         String response;
         String[] responseSplit;
         try {
-            //send start secure to sever
+            // send start secure to sever
             writer.println("startsecure");
             writer.flush();
 
-            //read ok <component-id>
+            // read ok <component-id>
             response = reader.readLine();
             responseSplit = response.split(" ");
             if (responseSplit.length != 2) {
                 throw new RuntimeException("Error while performing Handshake");
             }
             this.componentId = responseSplit[1];
+            System.out.println(response);
 
-            //send ok <client-challenge> <secret-key> <iv>
-            //String challenge = getRandomNumber(32);
-            //String iv = getRandomNumber(16);
-            SecureRandom secureRandom = new SecureRandom();
-            byte[] challengeb = new byte[32];
-            byte[] ivb = new byte[16];
-            secureRandom.nextBytes(challengeb);
-            secureRandom.nextBytes(ivb);
-            String iv = binaryToAscii(ivb);
-            String challenge = binaryToAscii(challengeb);
-            //secureRandom.nextBytes(output);
-            String secretKey = binaryToAscii(generateSecretKey("AES", 256).getEncoded());
-            System.out.println("Iv:" + iv);
-            System.out.println("challenge: " + challenge);
-            String message = "ok " + challenge + " " + secretKey + " " + iv;
-            System.out.println("String: " + message);
-            System.out.println("message in ascii" + message);
-            sendMessageClient(message);
+            // send ok <client-challenge> <secret-key> <iv>
+            String challenge = getRandomNumber(32);
+            String secretKey = binaryToBase64(generateSecretKey("AES", 256).getEncoded());
+            String iv = getRandomNumber(16);
+            System.out.println("sending challenge: " + iv);
+            sendChallenge(challenge, secretKey, iv);
+
+            System.out.println("initialising AES");
+            initAesCipher(secretKey, iv);
+            System.out.println("done initialising AES");
+
+            // read ok <client-challenge>
+            response = readMessage();
+            System.out.println("client challenge: " + response);
+            responseSplit = response.split(" ");
+            if (responseSplit.length != 2) {
+                throw new RuntimeException("Error while performing Handshake");
+            }
+            if (!responseSplit[1].equals(challenge)) {
+                throw new RuntimeException("Error while performing Handshake");
+            }
+
+            // send ok
+            sendMessage("ok");
+
+            System.out.println("Handshake complete");
 
         } catch (IOException | NoSuchPaddingException | InvalidKeyException | IllegalBlockSizeException | BadPaddingException | NoSuchAlgorithmException e) {
             throw new RuntimeException("error while performing handshake" + e.getMessage());
         }
     }
 
+    @Override
     public void performHandshakeServer() {
         String response;
         try {
+            // send ok <componentId>
             writer.println("ok " + componentId);
             writer.flush();
+            System.out.println("send componentId: " + componentId);
 
-            response = readResponseServer();
-            System.out.println("response: " + response);
+            // read ok <client-challenge> <secret-key> <iv>
+            response = readChallenge();
             String[] responseSplit = getChallengeAndIv(response);
             if (responseSplit == null){
                 return;
             }
             String clientChallenge = responseSplit[1];
             String secretKey = responseSplit[2];
-            this.iv = responseSplit[3];
+            String iv = responseSplit[3];
+            System.out.println("iv: " + iv);
+            System.out.flush();
 
-            System.out.println(response);
+            initAesCipher(secretKey, iv);
+
+            // send ok <client-challenge>
+            String message = "ok " + clientChallenge;
+            System.out.println("sending: " + message);
+            sendMessage(message);
+
+            // read ok
+            response = readMessage();
+            if (!response.equals("ok")) {
+                throw new RuntimeException("Error unable to perform Handshake");
+            }
+
+            System.out.println("Handshake complete!");
+
         } catch (IOException e) {
             throw new RuntimeException("unable to perform Handshake: " + e.getMessage());
         } catch (NoSuchPaddingException | IllegalBlockSizeException | NoSuchAlgorithmException | BadPaddingException | InvalidKeyException e) {
