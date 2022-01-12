@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.Buffer;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
@@ -30,10 +31,11 @@ public class MessageClient implements IMessageClient, Runnable {
     private Shell shell;
     private Config config;
     private SecretKeySpec hmac;
+    private String componentId;
 
-    private Socket socketDMAP;
+/*    private Socket socketDMAP;
     BufferedReader readerDMAP;
-    PrintWriter writerDMAP;
+    PrintWriter writerDMAP;*/
 
     private Socket socketDMTP;
     BufferedReader readerDMTP;
@@ -45,11 +47,12 @@ public class MessageClient implements IMessageClient, Runnable {
      * Creates a new client instance.
      *
      * @param componentId the id of the component that corresponds to the Config resource
-     * @param config the component config
-     * @param in the input stream to read console input from
-     * @param out the output stream to write console output to
+     * @param config      the component config
+     * @param in          the input stream to read console input from
+     * @param out         the output stream to write console output to
      */
     public MessageClient(String componentId, Config config, InputStream in, PrintStream out) {
+        this.componentId = componentId;
         this.config = config;
         try {
             this.hmac = Keys.readSecretKey(new File("keys/hmac.key"));
@@ -60,7 +63,7 @@ public class MessageClient implements IMessageClient, Runnable {
         this.shell.register(this);
         this.shell.setPrompt(componentId + "> ");
 
-        if(!connectDMAP()) shell.out().println("Could not connect to mailbox server");
+        if (!connectDMAP()) shell.out().println("Could not connect to mailbox server");
     }
 
     @Override
@@ -71,7 +74,7 @@ public class MessageClient implements IMessageClient, Runnable {
 
     @Override
     @Command
-    public void startsecure(){
+    public void startsecure() {
 
     }
 
@@ -80,60 +83,54 @@ public class MessageClient implements IMessageClient, Runnable {
     public void inbox() {
         dmapSecure.sendMessage("list");
         ArrayList<String> ids = new ArrayList<>();
-        try {
 
-            String response = dmapSecure.readMessage();
-            while (true) {
-                response = dmapSecure.readMessage();
-                if(response.equals("none")) {
-                    shell.out().println("No messages in inbox");
-                    break;
-                } else if(response.equals("ok")) {
-                    break;
-                } else ids.add(response.split(" ")[0]);
+        String[] response = dmapSecure.readMessage().split("\n");
+        for (String line : response) {
+            if (line.equals("none")) {
+                shell.out().println("No messages in inbox");
+                break;
+            } else if (line.equals("ok")) {
+                break;
+            } else ids.add(line.split(" ")[0]);
+        }
+
+        // Formatting
+        if(!ids.isEmpty()) {
+            shell.out().println();
+            shell.out().println("=========================");
+            shell.out().println("_,.-#*' I N B O X '*#-.,_");
+            shell.out().println("=========================");
+            shell.out().println();
+        }
+
+        for (String id : ids) {
+            dmapSecure.sendMessage(String.format("show %s", id));
+            String[] answer = dmapSecure.readMessage().split("\n");
+            if (answer[0].equals("error unknown message id")) {
+                shell.out().println("Error unknown message ID: " + id);
+                return;
             }
-
-
-            for(String id : ids) {
-                writerDMAP.println(String.format("show %s", id));
-                writerDMAP.flush();
-
-                response = readerDMAP.readLine();
-                if(response.equals("error unknown message id")) {
-                    shell.out().println("Error unknown message ID: " + id);
-                    return;
-                }
-                while(true) {
-                    if(response.equals("ok")) {
-                        shell.out().println();
-                        break;
-                    } else if(response.startsWith("from")) {
-                        shell.out().println("ID: " + id);
-                        shell.out().println(response);
-                    } else {
-                        shell.out().println(response);
-                    }
-                    response = readerDMAP.readLine();
+            for (String line : answer) {
+                if (line.equals("ok")) {
+                    shell.out().println();
+                    break;
+                } else if (line.startsWith("from")) {
+                    shell.out().println("ID: " + id);
+                    shell.out().println(line);
+                } else {
+                    shell.out().println(line);
                 }
             }
-
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
     @Override
     @Command
     public void delete(String id) {
-        try {
-            writerDMAP.println(String.format("delete %s", id));
-            writerDMAP.flush();
-            String response = readerDMAP.readLine();
-            if(!response.split(" ")[0].equals("ok")) shell.out().println("ok");
-            else shell.out().println(response);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        dmapSecure.sendMessage(String.format("delete %s", id));
+        String response = dmapSecure.readMessage();
+        if (!response.split(" ")[0].equals("ok")) shell.out().println("ok");
+        else shell.out().println(response);
     }
 
     @Override
@@ -145,13 +142,13 @@ public class MessageClient implements IMessageClient, Runnable {
     @Override
     @Command
     public void msg(String to, String subject, String data) {
-        if(!connectDMTP()) shell.out().println("Could not connect to transfer server");
+        if (!connectDMTP()) shell.out().println("Could not connect to transfer server");
 
         try {
             writerDMTP.println("begin");
             writerDMTP.flush();
             String response = readerDMTP.readLine();
-            if(!response.split(" ")[0].equals("ok")) {
+            if (!response.split(" ")[0].equals("ok")) {
                 shell.out().println("error");
                 return;
             }
@@ -159,7 +156,7 @@ public class MessageClient implements IMessageClient, Runnable {
             writerDMTP.println(String.format("from %s", config.getString("transfer.email")));
             writerDMTP.flush();
             response = readerDMTP.readLine();
-            if(!response.split(" ")[0].equals("ok")) {
+            if (!response.split(" ")[0].equals("ok")) {
                 shell.out().println("error");
                 return;
             }
@@ -167,7 +164,7 @@ public class MessageClient implements IMessageClient, Runnable {
             writerDMTP.println(String.format("to %s", to));
             writerDMTP.flush();
             response = readerDMTP.readLine();
-            if(!response.split(" ")[0].equals("ok")) {
+            if (!response.split(" ")[0].equals("ok")) {
                 shell.out().println("error");
                 return;
             }
@@ -175,7 +172,7 @@ public class MessageClient implements IMessageClient, Runnable {
             writerDMTP.println(String.format("subject %s", subject));
             writerDMTP.flush();
             response = readerDMTP.readLine();
-            if(!response.split(" ")[0].equals("ok")) {
+            if (!response.split(" ")[0].equals("ok")) {
                 shell.out().println("error");
                 return;
             }
@@ -183,7 +180,7 @@ public class MessageClient implements IMessageClient, Runnable {
             writerDMTP.println(String.format("data %s", data));
             writerDMTP.flush();
             response = readerDMTP.readLine();
-            if(!response.split(" ")[0].equals("ok")) {
+            if (!response.split(" ")[0].equals("ok")) {
                 shell.out().println("error");
                 return;
             }
@@ -191,7 +188,7 @@ public class MessageClient implements IMessageClient, Runnable {
             writerDMTP.println("send");
             writerDMTP.flush();
             response = readerDMTP.readLine();
-            if(!response.split(" ")[0].equals("ok")) {
+            if (!response.split(" ")[0].equals("ok")) {
                 shell.out().println("error");
                 return;
             }
@@ -199,7 +196,7 @@ public class MessageClient implements IMessageClient, Runnable {
             writerDMTP.println("quit");
             writerDMTP.flush();
             response = readerDMTP.readLine();
-            if(!response.split(" ")[0].equals("ok")) {
+            if (!response.split(" ")[0].equals("ok")) {
                 shell.out().println("error");
                 return;
             }
@@ -217,24 +214,23 @@ public class MessageClient implements IMessageClient, Runnable {
     @Override
     @Command
     public void shutdown() {
-        try {
-            socketDMAP.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        //socketDMAP.close();
         throw new StopShellException();
     }
 
     public boolean connectDMAP() {
         try {
-            socketDMAP = new Socket(config.getString("mailbox.host"), config.getInt("mailbox.port"));
-            readerDMAP = new BufferedReader(new InputStreamReader(socketDMAP.getInputStream()));
-            writerDMAP = new PrintWriter(socketDMAP.getOutputStream());
+            Socket socketDMAP = new Socket(config.getString("mailbox.host"), config.getInt("mailbox.port"));
+            BufferedReader readerDMAP = new BufferedReader(new InputStreamReader(socketDMAP.getInputStream()));
+            PrintWriter writerDMAP = new PrintWriter(socketDMAP.getOutputStream());
 
-            if (readerDMAP.readLine().equals("ok DMAP2.0"));
-
-            dmapSecure = new DmapSecure(readerDMAP, writerDMAP, null);
+            if (readerDMAP.readLine().equals("ok DMAP2.0")) ;
+            dmapSecure = new DmapSecure(readerDMAP, writerDMAP, this.componentId);
             dmapSecure.performHandshakeClient();
+            if (!dmapSecure.readMessage().equals("ok")) {
+                shell.out().println("Error: Handshake failed");
+            }
+
 
             //perform login
             String loginMessage = String.format("login %s %s", config.getString("mailbox.user"), config.getString("mailbox.password"));
