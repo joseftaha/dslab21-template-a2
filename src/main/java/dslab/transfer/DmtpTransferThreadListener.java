@@ -1,6 +1,7 @@
 package dslab.transfer;
 
 import dslab.entity.Mail;
+import dslab.secure.DmtpSecure;
 import dslab.util.Config;
 import dslab.util.Validator;
 
@@ -18,11 +19,15 @@ public class DmtpTransferThreadListener extends Thread{
     private Mail mail;
     private boolean protocolError = false;
 
+    private final DmtpSecure dmtpSecure;
+
     public DmtpTransferThreadListener(Socket socket, BlockingQueue<Mail> mailQueue) {
 
         this.mailQueue = mailQueue;
         this.socket = socket;
         this.validator = new Validator();
+
+        this.dmtpSecure = new DmtpSecure();
 
     }
 

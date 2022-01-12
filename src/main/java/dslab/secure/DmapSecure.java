@@ -41,11 +41,11 @@ public class DmapSecure implements IDmapSecure {
         this.secureRandom = new SecureRandom();
     }
 
-    private static String binaryToBase64(byte[] input) {
+    public static String binaryToBase64(byte[] input) {
         return Base64.getEncoder().encodeToString(input);
     }
 
-    private static byte[] base64ToBinary(String input) {
+    public static byte[] base64ToBinary(String input) {
         return Base64.getDecoder().decode(input);
     }
 
