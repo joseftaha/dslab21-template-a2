@@ -1,13 +1,18 @@
 package dslab.util;
 
 import dslab.entity.Mail;
+import dslab.secure.DmtpSecure;
 
 import java.util.Arrays;
-import java.util.regex.MatchResult;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class Validator {
+
+    private final DmtpSecure dmtpSecure;
+
+    public Validator() {
+        this.dmtpSecure = new DmtpSecure();
+    }
 
 
     public String validateMail(Mail mail){
@@ -30,6 +35,13 @@ public class Validator {
 
         if(mail.getSubject() == null){
             return "error no subject";
+        }
+
+        if (mail.getHash() != null) {
+            String computedHash = dmtpSecure.signMessage(mail);
+            if (!dmtpSecure.validateHash(computedHash, mail.getHash())) {
+                return "error message has been manipulated";
+            }
         }
         return null;
     }

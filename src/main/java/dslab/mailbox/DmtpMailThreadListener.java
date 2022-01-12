@@ -44,7 +44,7 @@ public class DmtpMailThreadListener extends Thread {
                 PrintWriter writer = new PrintWriter(socket.getOutputStream());
 
                 // response for valid connection
-                writer.println("ok DMTP");
+                writer.println("ok DMTP2.0");
                 writer.flush();
 
                 String request;
@@ -91,6 +91,15 @@ public class DmtpMailThreadListener extends Thread {
                             else {
                                 String[] data = Arrays.copyOfRange(parts, 1, parts.length);
                                 mail.setData(String.join(" ", data));
+                            }
+                            break;
+                        case "hash":
+                            if (mail == null) {
+                                response = "error no begin";
+                            } else if (parts.length == 2) {
+                                mail.setHash(parts[1]);
+                            } else if (parts.length > 2) {
+                                protocolError = true;
                             }
                             break;
                         case "send":
