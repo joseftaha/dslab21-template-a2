@@ -37,12 +37,6 @@ public class Validator {
             return "error no subject";
         }
 
-        if (mail.getHash() != null) {
-            String computedHash = dmtpSecure.signMessage(mail);
-            if (!dmtpSecure.validateHash(computedHash, mail.getHash())) {
-                return "error message has been manipulated";
-            }
-        }
         return null;
     }
 

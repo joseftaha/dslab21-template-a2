@@ -2,9 +2,9 @@ package dslab.secure;
 
 public interface IDmapSecure {
 
-    void performHandshakeClient();
+    void performHandshakeClient() throws HandshakeException;
 
-    void performHandshakeServer();
+    void performHandshakeServer() throws HandshakeException;
 
     void sendMessage(String message);
 

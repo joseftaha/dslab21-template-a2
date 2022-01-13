@@ -23,6 +23,7 @@ import dslab.ComponentFactory;
 import dslab.entity.Mail;
 import dslab.secure.DmapSecure;
 import dslab.secure.DmtpSecure;
+import dslab.secure.HandshakeException;
 import dslab.util.Config;
 import dslab.util.Keys;
 
@@ -272,6 +273,9 @@ public class MessageClient implements IMessageClient, Runnable {
 
         } catch (IOException e) {
             e.printStackTrace();
+        } catch (HandshakeException e) {
+            shell.out().println("Error: Unable to perform handshake");
+            //shutdown();
         }
     }
 

@@ -2,6 +2,7 @@ package dslab.mailbox;
 
 import dslab.entity.Mail;
 import dslab.secure.DmapSecure;
+import dslab.secure.HandshakeException;
 import dslab.util.Config;
 import dslab.util.UserMailBox;
 
@@ -56,8 +57,6 @@ public class DmapThreadListener extends Thread {
                     if (dmapSecure != null) {
                         request = dmapSecure.decryptMessage(request);
                     }
-
-                    System.out.println(request);
 
                     String[] parts = request.split("\\s");
                     String response = "ok";
@@ -147,6 +146,8 @@ public class DmapThreadListener extends Thread {
                 break;
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
+            } catch (HandshakeException e) {
+                System.out.println("HandshakeException while performing handshake: " + e.getMessage());
             } finally {
                 if (socket != null && !socket.isClosed()) {
                     try {
