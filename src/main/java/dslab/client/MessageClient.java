@@ -56,8 +56,7 @@ public class MessageClient implements IMessageClient, Runnable {
         this.shell.register(this);
         this.shell.setPrompt(componentId + "> ");
         this.dmtpSecure = new DmtpSecure();
-
-        if (!connectDMAP()) shell.out().println("Could not connect to mailbox server");
+        startsecure();
     }
 
     @Override
@@ -69,7 +68,7 @@ public class MessageClient implements IMessageClient, Runnable {
     @Override
     @Command
     public void startsecure() {
-
+        connectDMAP();
     }
 
     @Override
@@ -245,31 +244,35 @@ public class MessageClient implements IMessageClient, Runnable {
         throw new StopShellException();
     }
 
-    public boolean connectDMAP() {
+    public void connectDMAP() {
         try {
             Socket socketDMAP = new Socket(config.getString("mailbox.host"), config.getInt("mailbox.port"));
             BufferedReader readerDMAP = new BufferedReader(new InputStreamReader(socketDMAP.getInputStream()));
             PrintWriter writerDMAP = new PrintWriter(socketDMAP.getOutputStream());
 
-            if (readerDMAP.readLine().equals("ok DMAP2.0")) ;
+            if (!readerDMAP.readLine().equals("ok DMAP2.0")) {
+                shell.out().println("Error: Could not connect to DMAP Server");
+                return;
+            }
             dmapSecure = new DmapSecure(readerDMAP, writerDMAP, this.componentId);
             dmapSecure.performHandshakeClient();
             if (!dmapSecure.readMessage().equals("ok")) {
                 shell.out().println("Error: Handshake failed");
             }
 
-
-            //perform login
+            // perform login
             String loginMessage = String.format("login %s %s", config.getString("mailbox.user"), config.getString("mailbox.password"));
             dmapSecure.sendMessage(loginMessage);
 
             String response = dmapSecure.readMessage();
-            return response.split(" ").length == 1 && response.split(" ")[0].equals("ok");
+            if (!(response.split(" ").length == 1 && response.split(" ")[0].equals("ok"))) {
+                shell.out().println("Error: Could not log into Mailserver");
+                return;
+            }
 
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return false;
     }
 
     private boolean connectDMTP() {
