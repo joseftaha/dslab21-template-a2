@@ -150,14 +150,13 @@ public class MessageClient implements IMessageClient, Runnable {
                 mail.setData(line.substring(5));
             } else if (line.startsWith("hash")) {
                 hash = line.substring(5);
-            } else {
-                shell.out().println("Error");
+            } else if (line.startsWith("ok")) {
                 break;
             }
         }
         if (dmtpSecure.signMessage(mail).equals(hash)) {
             shell.out().println("ok");
-        }
+        } else shell.out().println("Error");
     }
 
     @Override
