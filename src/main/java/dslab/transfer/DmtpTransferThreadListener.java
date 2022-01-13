@@ -2,7 +2,6 @@ package dslab.transfer;
 
 import dslab.entity.Mail;
 import dslab.secure.DmtpSecure;
-import dslab.util.Config;
 import dslab.util.Validator;
 
 import java.io.*;
@@ -49,6 +48,8 @@ public class DmtpTransferThreadListener extends Thread{
                     String[] parts = request.split("\\s");
                     String response = "ok";
 
+                    System.out.println(request);
+
                     if (parts.length == 0) continue;
 
                     switch (parts[0]) {
@@ -84,6 +85,15 @@ public class DmtpTransferThreadListener extends Thread{
                             else {
                                 String[] data = Arrays.copyOfRange(parts, 1, parts.length);
                                 mail.setData(String.join(" ", data));
+                            }
+                            break;
+                        case "hash":
+                            if(validator.validateMail(mail) != null) {
+                                response = "error please finish the message before calculating hash";
+                            } else {
+                                String hash = dmtpSecure.signMessage(mail);
+                                mail.setHash(hash);
+                                response += " " + hash;
                             }
                             break;
                         case "send":

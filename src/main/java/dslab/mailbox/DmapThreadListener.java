@@ -57,6 +57,8 @@ public class DmapThreadListener extends Thread {
                         request = dmapSecure.decryptMessage(request);
                     }
 
+                    System.out.println(request);
+
                     String[] parts = request.split("\\s");
                     String response = "ok";
                     if (parts.length == 0) continue;

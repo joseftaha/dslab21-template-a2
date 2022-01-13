@@ -235,6 +235,9 @@ public class TransferServer implements ITransferServer, Runnable {
             writer.println("data "+mailToForward.getData());
             writer.flush();
             if (!reader.readLine().split(" ")[0].equals("ok")) return false;
+            writer.println("hash "+mailToForward.getHash());
+            writer.flush();
+            if (!reader.readLine().split(" ")[0].equals("ok")) return false;
             writer.println("send");
             writer.flush();
             if (!reader.readLine().split(" ")[0].equals("ok")) return false;
