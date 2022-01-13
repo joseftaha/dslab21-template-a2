@@ -55,6 +55,7 @@ public class MessageClient implements IMessageClient, Runnable {
         this.shell = new Shell(in, out);
         this.shell.register(this);
         this.shell.setPrompt(componentId + "> ");
+        this.dmtpSecure = new DmtpSecure();
 
         if (!connectDMAP()) shell.out().println("Could not connect to mailbox server");
     }
@@ -136,24 +137,27 @@ public class MessageClient implements IMessageClient, Runnable {
             shell.out().println("Error unknown message ID: " + id);
             return;
         }
-        StringBuilder hashInputBuilder = new StringBuilder();
+        Mail mail = new Mail();
+        String hash = null;
         for (String line : answer) {
-            if (line.equals("ok")) {
-                break;
-            } else if (line.startsWith("from")) {
-                hashInputBuilder.append(line.substring(5) + "\n");
+            if (line.startsWith("from")) {
+                mail.setFrom(line.substring(5));
             } else if (line.startsWith("to")) {
-                hashInputBuilder.append(line.substring(3) + "\n");
+                mail.setTo(line.substring(3));
             } else if (line.startsWith("subject")) {
-                hashInputBuilder.append(line.substring(8) + "\n");
+                mail.setSubject(line.substring(8));
             } else if (line.startsWith("data")) {
-                hashInputBuilder.append(line.substring(5) + "\n");
+                mail.setData(line.substring(5));
+            } else if (line.startsWith("hash")) {
+                hash = line.substring(5);
+            } else {
+                shell.out().println("Error");
+                break;
             }
         }
-        String hashInput = hashInputBuilder.toString();
-
-        // Get hmac key
-
+        if (dmtpSecure.signMessage(mail).equals(hash)) {
+            shell.out().println("ok");
+        }
     }
 
     @Override
@@ -165,61 +169,62 @@ public class MessageClient implements IMessageClient, Runnable {
         try {
             writerDMTP.println("begin");
             writerDMTP.flush();
-            String response = readerDMTP.readLine();
-            if (!response.split(" ")[0].equals("ok")) {
+            if (!readerDMTP.readLine().split(" ")[0].equals("ok")) {
                 shell.out().println("error");
                 return;
             }
 
             writerDMTP.println(String.format("from %s", config.getString("transfer.email")));
             writerDMTP.flush();
-            response = readerDMTP.readLine();
-            if (!response.split(" ")[0].equals("ok")) {
+            if (!readerDMTP.readLine().split(" ")[0].equals("ok")) {
                 shell.out().println("error");
                 return;
             }
 
             writerDMTP.println(String.format("to %s", to));
             writerDMTP.flush();
-            response = readerDMTP.readLine();
-            if (!response.split(" ")[0].equals("ok")) {
+            if (!readerDMTP.readLine().split(" ")[0].equals("ok")) {
                 shell.out().println("error");
                 return;
             }
 
             writerDMTP.println(String.format("subject %s", subject));
             writerDMTP.flush();
-            response = readerDMTP.readLine();
-            if (!response.split(" ")[0].equals("ok")) {
+            if (!readerDMTP.readLine().split(" ")[0].equals("ok")) {
                 shell.out().println("error");
                 return;
             }
 
             writerDMTP.println(String.format("data %s", data));
             writerDMTP.flush();
-            response = readerDMTP.readLine();
-            if (!response.split(" ")[0].equals("ok")) {
+            if (!readerDMTP.readLine().split(" ")[0].equals("ok")) {
                 shell.out().println("error");
                 return;
             }
 
             // Sign with hash
-            String hashInput = String.format("%s\n%s\n%s\n%s\n", config.getString("transfer.email"), to, subject, data);
-            dmtpSecure = new DmtpSecure();
-            System.out.println(dmtpSecure.signMessage(hashInput));
+            Mail mail = new Mail();
+            mail.setFrom(config.getString("transfer.email"));
+            mail.setTo(to);
+            mail.setSubject(subject);
+            mail.setData(data);
+            writerDMTP.println(String.format("hash %s",dmtpSecure.signMessage(mail)));
+            writerDMTP.flush();
+            if (!readerDMTP.readLine().split(" ")[0].equals("ok")) {
+                shell.out().println("error");
+                return;
+            }
 
             writerDMTP.println("send");
             writerDMTP.flush();
-            response = readerDMTP.readLine();
-            if (!response.split(" ")[0].equals("ok")) {
+            if (!readerDMTP.readLine().split(" ")[0].equals("ok")) {
                 shell.out().println("error");
                 return;
             }
 
             writerDMTP.println("quit");
             writerDMTP.flush();
-            response = readerDMTP.readLine();
-            if (!response.split(" ")[0].equals("ok")) {
+            if (!readerDMTP.readLine().split(" ")[0].equals("ok")) {
                 shell.out().println("error");
                 return;
             }

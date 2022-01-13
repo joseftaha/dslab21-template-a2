@@ -54,8 +54,6 @@ public class DmtpSecure implements IDmtpSecure{
 
         String mailString = String.join("\n", mail.getFrom(), mail.getTo(), mail.getSubject(), mail.getData());
 
-        System.out.println("Mail: " + mailString);
-
         return signMessage(mailString);
     }
 
