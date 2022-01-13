@@ -10,6 +10,7 @@ public class Mail {
     private String to;
     private String subject;
     private String data;
+    private String hash;
 
 
     public String getFrom() {
@@ -50,6 +51,13 @@ public class Mail {
         this.data = data;
     }
 
+    public String getHash() {
+        return hash;
+    }
+
+    public void setHash(String hash) {
+        this.hash = hash;
+    }
 
     @Override
     public String toString() {
@@ -57,6 +65,7 @@ public class Mail {
                 "to " + to + "\n" +
                 "subject " + subject + "\n" +
                 "data " + data + "\n" +
+                "hash " + hash + "\n" +
                 "ok";
     }
 

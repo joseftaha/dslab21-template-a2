@@ -20,7 +20,9 @@ import at.ac.tuwien.dsg.orvell.Shell;
 import at.ac.tuwien.dsg.orvell.StopShellException;
 import at.ac.tuwien.dsg.orvell.annotation.Command;
 import dslab.ComponentFactory;
+import dslab.entity.Mail;
 import dslab.secure.DmapSecure;
+import dslab.secure.DmtpSecure;
 import dslab.util.Config;
 import dslab.util.Keys;
 
@@ -30,18 +32,14 @@ public class MessageClient implements IMessageClient, Runnable {
 
     private Shell shell;
     private Config config;
-    private SecretKeySpec hmac;
     private String componentId;
-
-/*    private Socket socketDMAP;
-    BufferedReader readerDMAP;
-    PrintWriter writerDMAP;*/
 
     private Socket socketDMTP;
     BufferedReader readerDMTP;
     PrintWriter writerDMTP;
 
     private DmapSecure dmapSecure;
+    private DmtpSecure dmtpSecure;
 
     /**
      * Creates a new client instance.
@@ -54,11 +52,6 @@ public class MessageClient implements IMessageClient, Runnable {
     public MessageClient(String componentId, Config config, InputStream in, PrintStream out) {
         this.componentId = componentId;
         this.config = config;
-        try {
-            this.hmac = Keys.readSecretKey(new File("keys/hmac.key"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
         this.shell = new Shell(in, out);
         this.shell.register(this);
         this.shell.setPrompt(componentId + "> ");
@@ -136,13 +129,38 @@ public class MessageClient implements IMessageClient, Runnable {
     @Override
     @Command
     public void verify(String id) {
-        System.out.println();
+        // Get mail
+        dmapSecure.sendMessage(String.format("show %s", id));
+        String[] answer = dmapSecure.readMessage().split("\n");
+        if (answer[0].equals("error unknown message id")) {
+            shell.out().println("Error unknown message ID: " + id);
+            return;
+        }
+        StringBuilder hashInputBuilder = new StringBuilder();
+        for (String line : answer) {
+            if (line.equals("ok")) {
+                break;
+            } else if (line.startsWith("from")) {
+                hashInputBuilder.append(line.substring(5) + "\n");
+            } else if (line.startsWith("to")) {
+                hashInputBuilder.append(line.substring(3) + "\n");
+            } else if (line.startsWith("subject")) {
+                hashInputBuilder.append(line.substring(8) + "\n");
+            } else if (line.startsWith("data")) {
+                hashInputBuilder.append(line.substring(5) + "\n");
+            }
+        }
+        String hashInput = hashInputBuilder.toString();
+
+        // Get hmac key
+
     }
 
     @Override
     @Command
     public void msg(String to, String subject, String data) {
         if (!connectDMTP()) shell.out().println("Could not connect to transfer server");
+        StringBuilder request = new StringBuilder();
 
         try {
             writerDMTP.println("begin");
@@ -184,6 +202,11 @@ public class MessageClient implements IMessageClient, Runnable {
                 shell.out().println("error");
                 return;
             }
+
+            // Sign with hash
+            String hashInput = String.format("%s\n%s\n%s\n%s\n", config.getString("transfer.email"), to, subject, data);
+            dmtpSecure = new DmtpSecure();
+            System.out.println(dmtpSecure.signMessage(hashInput));
 
             writerDMTP.println("send");
             writerDMTP.flush();
