@@ -2,6 +2,7 @@ package dslab.mailbox;
 
 import dslab.entity.Mail;
 import dslab.secure.DmapSecure;
+import dslab.secure.HandshakeException;
 import dslab.util.Config;
 import dslab.util.UserMailBox;
 
@@ -27,7 +28,7 @@ public class DmapThreadListener extends Thread {
     private String username = null;
     private boolean protocolError = false;
 
-    private final static String CIPHER_ALGORITHM = "RSA/ECB/PKCS1Padding";
+    private DmapSecure dmapSecure;
 
     public DmapThreadListener(String componentId, Socket socket, Config users, Map<String, UserMailBox> mailBoxes) {
 
@@ -53,13 +54,17 @@ public class DmapThreadListener extends Thread {
                 String request;
                 while ((request = reader.readLine()) != null) {
 
+                    if (dmapSecure != null) {
+                        request = dmapSecure.decryptMessage(request);
+                    }
+
                     String[] parts = request.split("\\s");
                     String response = "ok";
                     if (parts.length == 0) continue;
 
                     switch (parts[0]) {
                         case "startsecure":
-                            DmapSecure dmapSecure = new DmapSecure(reader, writer, componentId);
+                            dmapSecure = new DmapSecure(reader, writer, componentId);
                             dmapSecure.performHandshakeServer();
                             break;
                         case "login":
@@ -128,9 +133,12 @@ public class DmapThreadListener extends Thread {
                         socket.close();
                     }
 
-                    writer.println(response);
-                    writer.flush();
-
+                    if (dmapSecure == null) {
+                        writer.println(response);
+                        writer.flush();
+                    } else {
+                        dmapSecure.sendMessage(response);
+                    }
                 }
 
             } catch (SocketException e) {
@@ -138,6 +146,8 @@ public class DmapThreadListener extends Thread {
                 break;
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
+            } catch (HandshakeException e) {
+                System.out.println("HandshakeException while performing handshake: " + e.getMessage());
             } finally {
                 if (socket != null && !socket.isClosed()) {
                     try {

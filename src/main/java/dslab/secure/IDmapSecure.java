@@ -5,12 +5,12 @@ public interface IDmapSecure {
     /**
      * client performs the handshake with the server
      */
-    void performHandshakeClient();
+    void performHandshakeClient() throws HandshakeException;
 
     /**
      * server performs handshake with the client
      */
-    void performHandshakeServer();
+    void performHandshakeServer() throws HandshakeException;
 
     /**
      * encrypts and sends a message
