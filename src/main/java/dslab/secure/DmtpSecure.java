@@ -61,9 +61,4 @@ public class DmtpSecure implements IDmtpSecure{
     public boolean validateHash(byte[] computedHash, byte[] receivedHash) {
         return MessageDigest.isEqual(computedHash, receivedHash);
     }
-
-    @Override
-    public boolean validateHash(String computedHash, String receivedHash) {
-        return validateHash(computedHash.getBytes(), receivedHash.getBytes());
-    }
 }
