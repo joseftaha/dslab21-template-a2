@@ -14,7 +14,7 @@ public interface IDmapSecure {
 
     /**
      * encrypts and sends a message
-     * @param message
+     * @param message to be sent
      */
     void sendMessage(String message);
 
